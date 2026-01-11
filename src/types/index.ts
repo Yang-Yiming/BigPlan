@@ -16,3 +16,12 @@ export type {
   RecurrenceFrequency,
   RecurrencePattern,
 } from './task';
+
+export type {
+  KissReflection,
+  CreateKissReflectionInput,
+  UpdateKissReflectionInput,
+  KissReflectionResponse,
+  KissUnlockStatus,
+  CreateKissReflectionResponse,
+} from './kiss-reflection';

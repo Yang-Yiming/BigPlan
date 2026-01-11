@@ -6,6 +6,7 @@ import type { DbClient } from '../db/client';
 import { authRoutes } from './routes/auth';
 import { taskRoutes } from './routes/tasks';
 import { reflectionRoutes } from './routes/reflections';
+import { kissRoutes } from './routes/kiss';
 
 const app = new Hono<{
   Variables: {
@@ -36,5 +37,6 @@ app.get('/', (c) => {
 app.route('/api/auth', authRoutes);
 app.route('/api/tasks', taskRoutes);
 app.route('/api/reflections', reflectionRoutes);
+app.route('/api/kiss', kissRoutes);
 
 export default app;
