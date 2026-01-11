@@ -2,7 +2,7 @@
  * 群组相关 API 服务
  */
 
-import apiClient from '../lib/api-client';
+import { apiClient } from '../lib/api-client';
 import type {
   Group,
   GroupMember,

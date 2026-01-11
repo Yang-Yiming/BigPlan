@@ -5,3 +5,6 @@ export { TaskCard } from './TaskCard';
 export { TaskForm } from './TaskForm';
 export { KissForm } from './KissForm';
 export { MemberAvatarList } from './MemberAvatarList';
+export { CommentList } from './CommentList';
+export { CommentForm } from './CommentForm';
+export { CommentItem } from './CommentItem';

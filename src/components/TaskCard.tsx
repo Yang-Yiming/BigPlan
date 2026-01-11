@@ -1,17 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Task } from '../types';
+import { CommentList } from './CommentList';
+import { commentService } from '../services/comment.service';
 
 interface TaskCardProps {
   task: Task;
+  currentUserId: number;
+  targetUserId: number;
+  selectedDate: string;
   onUpdate?: (taskId: number, progressValue: number) => Promise<void>;
   onEdit?: (task: Task) => void;
   onDelete?: (taskId: number) => Promise<void>;
 }
 
-export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
+export function TaskCard({
+  task,
+  currentUserId,
+  targetUserId,
+  selectedDate,
+  onUpdate,
+  onEdit,
+  onDelete,
+}: TaskCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(0);
 
   const isReadOnly = !onUpdate || !onEdit || !onDelete;
+
+  // 加载评论数量
+  useEffect(() => {
+    const loadCommentCount = async () => {
+      try {
+        const comments = await commentService.getComments({
+          taskId: task.id,
+          date: selectedDate,
+          targetUserId,
+        });
+        setCommentCount(comments.length);
+      } catch (error) {
+        console.error('加载评论数量失败:', error);
+      }
+    };
+    loadCommentCount();
+  }, [task.id, selectedDate, targetUserId]);
+
+  const handleCommentAdded = async () => {
+    // 刷新评论数量
+    try {
+      const comments = await commentService.getComments({
+        taskId: task.id,
+        date: selectedDate,
+        targetUserId,
+      });
+      setCommentCount(comments.length);
+    } catch (error) {
+      console.error('刷新评论数量失败:', error);
+    }
+  };
 
   const handleProgressClick = async () => {
     if (task.progressType === 'boolean' && onUpdate) {
@@ -302,6 +348,52 @@ export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
                 />
               </svg>
               <span>周期性任务</span>
+            </div>
+          )}
+
+          {/* 评论按钮 */}
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <button
+              onClick={() => setShowComments(!showComments)}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span>评论</span>
+              {commentCount > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
+                  {commentCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* 评论区域 */}
+          {showComments && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <CommentList
+                filters={{
+                  taskId: task.id,
+                  date: selectedDate,
+                  targetUserId,
+                  isDailyComment: false,
+                }}
+                currentUserId={currentUserId}
+                autoRefresh={true}
+                refreshInterval={15000}
+                onCommentAdded={handleCommentAdded}
+              />
             </div>
           )}
         </div>

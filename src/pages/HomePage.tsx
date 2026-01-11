@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { DatePicker, TaskCard, TaskForm, KissForm, MemberAvatarList } from '../components';
+import {
+  DatePicker,
+  TaskCard,
+  TaskForm,
+  KissForm,
+  MemberAvatarList,
+  CommentList,
+} from '../components';
 import { taskService } from '../services/task.service';
 import { kissService } from '../services/kiss.service';
 import { groupService } from '../services/group.service';
@@ -10,7 +17,7 @@ import type { TaskFormData } from '../components/TaskForm';
 import type { KissFormData } from '../components/KissForm';
 import type { GroupMember, Group } from '../types/group';
 
-type TabType = 'tasks' | 'kiss';
+type TabType = 'tasks' | 'kiss' | 'comments';
 
 export function HomePage() {
   const { user, logout } = useAuth();
@@ -227,6 +234,7 @@ export function HomePage() {
   };
 
   const isViewingOwnData = selectedMemberId === null;
+  const currentViewUserId = isViewingOwnData ? user!.id : selectedMemberId!;
   const currentViewUsername = isViewingOwnData
     ? user?.username
     : groupMembers.find(m => m.userId === selectedMemberId)?.username;
@@ -348,6 +356,16 @@ export function HomePage() {
                   )}
                 </button>
               )}
+              <button
+                onClick={() => setActiveTab('comments')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'comments'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                全天评论
+              </button>
             </nav>
           </div>
 
@@ -418,6 +436,9 @@ export function HomePage() {
                     <TaskCard
                       key={task.id}
                       task={task}
+                      currentUserId={user!.id}
+                      targetUserId={currentViewUserId}
+                      selectedDate={selectedDate}
                       onUpdate={isViewingOwnData ? handleUpdateProgress : undefined}
                       onEdit={isViewingOwnData ? handleEditTask : undefined}
                       onDelete={isViewingOwnData ? handleDeleteTask : undefined}
@@ -442,7 +463,28 @@ export function HomePage() {
                 unlockStatus={kissUnlockStatus}
                 onSubmit={isViewingOwnData ? handleKissFormSubmit : undefined}
                 onPlanNextDay={isViewingOwnData ? handlePlanNextDay : undefined}
-                readOnly={!isViewingOwnData}
+              />
+            </div>
+          )}
+
+          {/* Comments Tab Content */}
+          {activeTab === 'comments' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                {isViewingOwnData
+                  ? '全天评论'
+                  : `${currentViewUsername} 的全天评论`}
+              </h2>
+              <CommentList
+                filters={{
+                  date: selectedDate,
+                  targetUserId: currentViewUserId,
+                  isDailyComment: true,
+                }}
+                currentUserId={user!.id}
+                autoRefresh={true}
+                refreshInterval={15000}
+                showForm={true}
               />
             </div>
           )}
