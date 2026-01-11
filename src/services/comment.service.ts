@@ -17,14 +17,14 @@ export const commentService = {
         params.append('date', filters.date);
       }
 
-      const response = await apiClient.get<Comment[]>(`/comments/daily?${params.toString()}`);
-      return response.data;
+      const response = await apiClient.get<{ comments: Comment[] }>(`/comments/daily?${params.toString()}`);
+      return response.data.comments;
     }
 
     // 如果是任务评论，使用 /task/:taskId 端点
     if (filters?.taskId) {
-      const response = await apiClient.get<Comment[]>(`/comments/task/${filters.taskId}`);
-      return response.data;
+      const response = await apiClient.get<{ comments: Comment[] }>(`/comments/task/${filters.taskId}`);
+      return response.data.comments;
     }
 
     // 默认返回空数组
