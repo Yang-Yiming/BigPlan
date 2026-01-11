@@ -18,7 +18,7 @@ export const taskService = {
 
   // Get tasks by date for a specific user (group member)
   async getUserTasksByDate(userId: number, date: string): Promise<Task[]> {
-    const response = await apiClient.get<TasksResponse>(`/users/${userId}/tasks`, {
+    const response = await apiClient.get<TasksResponse>(`/tasks/users/${userId}/tasks`, {
       params: { date },
     });
     return response.data.tasks;
@@ -32,13 +32,25 @@ export const taskService = {
 
   // Create a new task
   async createTask(data: CreateTaskInput): Promise<Task> {
-    const response = await apiClient.post<TaskResponse>('/tasks', data);
+    const payload = {
+      ...data,
+      recurrencePattern: data.recurrencePattern
+        ? JSON.stringify(data.recurrencePattern)
+        : undefined,
+    };
+    const response = await apiClient.post<TaskResponse>('/tasks', payload);
     return response.data.task;
   },
 
   // Update a task
   async updateTask(id: number, data: UpdateTaskInput): Promise<Task> {
-    const response = await apiClient.put<TaskResponse>(`/tasks/${id}`, data);
+    const payload = {
+      ...data,
+      recurrencePattern: data.recurrencePattern
+        ? JSON.stringify(data.recurrencePattern)
+        : undefined,
+    };
+    const response = await apiClient.put<TaskResponse>(`/tasks/${id}`, payload);
     return response.data.task;
   },
 

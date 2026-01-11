@@ -5,6 +5,7 @@ export const groups = sqliteTable('groups', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   inviteCode: text('invite_code').notNull().unique(),
+  ownerId: integer('owner_id').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),

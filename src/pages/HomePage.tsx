@@ -21,6 +21,7 @@ import type { Task, KissReflection, KissUnlockStatus } from '../types';
 import type { TaskFormData } from '../components/TaskForm';
 import type { KissFormData } from '../components/KissForm';
 import type { GroupMember, Group } from '../types/group';
+import { getLocalDateString } from '../utils/date';
 
 type TabType = 'tasks' | 'kiss' | 'comments';
 
@@ -29,9 +30,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('tasks');
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString());
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -237,7 +236,7 @@ export function HomePage() {
     // Navigate to next day and switch to tasks tab
     const nextDate = new Date(selectedDate);
     nextDate.setDate(nextDate.getDate() + 1);
-    const nextDateString = nextDate.toISOString().split('T')[0];
+    const nextDateString = getLocalDateString(nextDate);
     setSelectedDate(nextDateString);
     setActiveTab('tasks');
   };

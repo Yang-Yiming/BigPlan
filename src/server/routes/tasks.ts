@@ -158,6 +158,48 @@ taskRoutes.get('/', async (c) => {
   }
 });
 
+// GET /api/users/:userId/tasks - 获取指定用户的任务列表（用于群组成员查看）
+taskRoutes.get('/users/:userId/tasks', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const targetUserId = parseInt(c.req.param('userId'));
+    if (isNaN(targetUserId)) {
+      return c.json({ error: 'Invalid user ID' }, 400);
+    }
+
+    const date = c.req.query('date');
+    if (!date) {
+      return c.json({ error: 'Date parameter is required' }, 400);
+    }
+
+    // 验证日期格式
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return c.json({ error: 'Invalid date format. Use YYYY-MM-DD' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // TODO: 在未来可以添加群组成员验证逻辑
+    // 现在先简单实现:任何登录用户都可以查看其他用户的任务
+
+    const taskList = await db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.userId, targetUserId), eq(tasks.date, date)))
+      .orderBy(tasks.createdAt);
+
+    return c.json({ tasks: taskList });
+  } catch (error) {
+    console.error('Get user tasks error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
 // GET /api/tasks/recurring - 获取所有周期性任务
 taskRoutes.get('/recurring', async (c) => {
   try {
@@ -299,6 +341,59 @@ taskRoutes.put('/:id', async (c) => {
     });
   } catch (error) {
     console.error('Update task error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// PATCH /api/tasks/:id/progress - 更新任务进度
+taskRoutes.patch('/:id/progress', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const taskId = parseInt(c.req.param('id'));
+    if (isNaN(taskId)) {
+      return c.json({ error: 'Invalid task ID' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // 检查任务是否存在且属于当前用户
+    const [existingTask] = await db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, userPayload.userId)))
+      .limit(1);
+
+    if (!existingTask) {
+      return c.json({ error: 'Task not found' }, 404);
+    }
+
+    const body = await c.req.json();
+    const { progressValue } = body;
+
+    if (progressValue === undefined || typeof progressValue !== 'number') {
+      return c.json({ error: 'Progress value is required and must be a number' }, 400);
+    }
+
+    // 更新任务进度
+    const [updatedTask] = await db
+      .update(tasks)
+      .set({
+        progressValue,
+        updatedAt: sql`(unixepoch())`,
+      })
+      .where(and(eq(tasks.id, taskId), eq(tasks.userId, userPayload.userId)))
+      .returning();
+
+    return c.json({
+      message: 'Task progress updated successfully',
+      task: updatedTask,
+    });
+  } catch (error) {
+    console.error('Update task progress error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });

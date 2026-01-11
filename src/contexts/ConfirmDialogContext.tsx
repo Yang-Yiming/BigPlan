@@ -36,18 +36,22 @@ export const ConfirmDialogProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const handleConfirm = useCallback(() => {
-    if (dialogState.resolver) {
-      dialogState.resolver(true);
-    }
-    setDialogState({ isOpen: false, options: { message: '' }, resolver: null });
-  }, [dialogState.resolver]);
+    setDialogState((prev) => {
+      if (prev.resolver) {
+        prev.resolver(true);
+      }
+      return { isOpen: false, options: { message: '' }, resolver: null };
+    });
+  }, []);
 
   const handleCancel = useCallback(() => {
-    if (dialogState.resolver) {
-      dialogState.resolver(false);
-    }
-    setDialogState({ isOpen: false, options: { message: '' }, resolver: null });
-  }, [dialogState.resolver]);
+    setDialogState((prev) => {
+      if (prev.resolver) {
+        prev.resolver(false);
+      }
+      return { isOpen: false, options: { message: '' }, resolver: null };
+    });
+  }, []);
 
   const { options } = dialogState;
   const type = options.type || 'warning';

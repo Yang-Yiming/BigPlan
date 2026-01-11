@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { formatLocalDate, getLocalDateString } from '../utils/date';
 
 interface DatePickerProps {
   selectedDate: string;
@@ -21,17 +22,17 @@ export function DatePicker({ selectedDate, onDateChange }: DatePickerProps) {
   const handlePrevDay = () => {
     const date = new Date(selectedDate);
     date.setDate(date.getDate() - 1);
-    onDateChange(date.toISOString().split('T')[0]);
+    onDateChange(formatLocalDate(date));
   };
 
   const handleNextDay = () => {
     const date = new Date(selectedDate);
     date.setDate(date.getDate() + 1);
-    onDateChange(date.toISOString().split('T')[0]);
+    onDateChange(formatLocalDate(date));
   };
 
   const handleToday = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     onDateChange(today);
     setShowCalendar(false);
   };

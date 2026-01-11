@@ -39,7 +39,7 @@ export const authService = {
     }
 
     try {
-      const response = await apiClient.get<{ user: User }>('/auth/verify');
+      const response = await apiClient.get<{ user: User }>('/auth/me');
       const user = response.data.user;
       this.setUser(user);
       return user;

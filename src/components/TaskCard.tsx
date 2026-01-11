@@ -73,7 +73,7 @@ export function TaskCard({
           'success',
           2000
         );
-      } catch (error) {
+      } catch {
         showToast('更新进度失败', 'error');
       }
     }
@@ -84,7 +84,7 @@ export function TaskCard({
       try {
         await onUpdate(task.id, value);
         showToast('进度已更新', 'success', 2000);
-      } catch (error) {
+      } catch {
         showToast('更新进度失败', 'error');
       }
     }
@@ -95,7 +95,7 @@ export function TaskCard({
       try {
         await onUpdate(task.id, value);
         showToast('进度已更新', 'success', 2000);
-      } catch (error) {
+      } catch {
         showToast('更新进度失败', 'error');
       }
     }
@@ -238,7 +238,7 @@ export function TaskCard({
           </div>
         );
 
-      case 'percentage':
+      case 'percentage': {
         const percentage = task.maxProgress
           ? (task.progressValue / task.maxProgress) * 100
           : 0;
@@ -313,6 +313,7 @@ export function TaskCard({
             )}
           </div>
         );
+      }
     }
   };
 

@@ -5,6 +5,7 @@ import { CommentItem } from './CommentItem';
 import { CommentForm } from './CommentForm';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmDialogContext';
+import { getLocalDateString } from '../utils/date';
 
 interface CommentListProps {
   filters: CommentFilters;
@@ -65,7 +66,7 @@ export function CommentList({
       const newComment: NewComment = {
         targetUserId: filters.targetUserId || currentUserId,
         taskId: filters.taskId,
-        date: filters.date || new Date().toISOString().split('T')[0],
+        date: filters.date || getLocalDateString(),
         content,
         isDailyComment: filters.isDailyComment || false,
       };
@@ -74,7 +75,7 @@ export function CommentList({
       await loadComments();
       onCommentAdded?.();
       showToast('评论已添加', 'success', 2000);
-    } catch (err) {
+    } catch {
       showToast('添加评论失败', 'error');
     }
   };
@@ -95,7 +96,7 @@ export function CommentList({
       await commentService.deleteComment(id);
       await loadComments();
       showToast('评论已删除', 'success');
-    } catch (err) {
+    } catch {
       showToast('删除评论失败', 'error');
     }
   };

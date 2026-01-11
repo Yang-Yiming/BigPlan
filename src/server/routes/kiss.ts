@@ -241,3 +241,124 @@ kissRoutes.delete('/:id', async (c) => {
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
+
+// GET /api/users/:userId/kiss?date=YYYY-MM-DD - 获取指定用户的 KISS 复盘（群组功能）
+kissRoutes.get('/users/:userId/kiss', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const targetUserId = parseInt(c.req.param('userId'));
+    if (isNaN(targetUserId)) {
+      return c.json({ error: 'Invalid user ID' }, 400);
+    }
+
+    const date = c.req.query('date');
+    if (!date) {
+      return c.json({ error: 'Date parameter is required' }, 400);
+    }
+
+    // 验证日期格式 (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return c.json({ error: 'Invalid date format. Use YYYY-MM-DD' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // TODO: 在未来可以添加群组成员验证逻辑
+    // 现在先简单实现：任何登录用户都可以查看其他用户的 KISS 复盘
+
+    const reflection = await db
+      .select()
+      .from(kissReflections)
+      .where(
+        and(
+          eq(kissReflections.userId, targetUserId),
+          eq(kissReflections.date, date)
+        )
+      )
+      .get();
+
+    return c.json({ reflection: reflection || null });
+  } catch (error) {
+    console.error('Error fetching user KISS reflection:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// GET /api/users/:userId/kiss/check-unlock?date=YYYY-MM-DD - 检查指定用户的 KISS 是否解锁
+kissRoutes.get('/users/:userId/kiss/check-unlock', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const targetUserId = parseInt(c.req.param('userId'));
+    if (isNaN(targetUserId)) {
+      return c.json({ error: 'Invalid user ID' }, 400);
+    }
+
+    const date = c.req.query('date');
+    if (!date) {
+      return c.json({ error: 'Date parameter is required' }, 400);
+    }
+
+    // 验证日期格式 (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return c.json({ error: 'Invalid date format. Use YYYY-MM-DD' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // TODO: 在未来可以添加群组成员验证逻辑
+
+    // 获取指定用户在指定日期的所有任务
+    const userTasks = await db
+      .select()
+      .from(tasks)
+      .where(
+        and(eq(tasks.userId, targetUserId), eq(tasks.date, date))
+      )
+      .all();
+
+    // 计算任务完成情况
+    let totalTasks = userTasks.length;
+    let completedTasks = 0;
+
+    for (const task of userTasks) {
+      if (task.progressType === 'boolean') {
+        if (task.progressValue === 1) {
+          completedTasks++;
+        }
+      } else if (task.progressType === 'numeric') {
+        if (task.maxProgress && task.progressValue >= task.maxProgress) {
+          completedTasks++;
+        }
+      } else if (task.progressType === 'percentage') {
+        if (task.progressValue >= 100) {
+          completedTasks++;
+        }
+      }
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const isBeforeToday = date < today;
+    const isUnlocked =
+      totalTasks === 0 || completedTasks === totalTasks || isBeforeToday;
+
+    return c.json({
+      isUnlocked,
+      totalTasks,
+      completedTasks,
+      canRetroactivelyFill: isBeforeToday,
+    });
+  } catch (error) {
+    console.error('Error checking user KISS unlock status:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});

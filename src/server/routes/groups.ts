@@ -94,6 +94,7 @@ groupRoutes.post('/', async (c) => {
       .values({
         name: name.trim(),
         inviteCode,
+        ownerId: userPayload.userId,
       })
       .returning();
 
@@ -366,6 +367,210 @@ groupRoutes.get('/:id/member/:userId/tasks', async (c) => {
     return c.json({ tasks: userTasks });
   } catch (error) {
     console.error('Get group member tasks error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// GET /api/groups/:id - 获取群组详情
+groupRoutes.get('/:id', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const groupId = parseInt(c.req.param('id'));
+    if (isNaN(groupId)) {
+      return c.json({ error: 'Invalid group ID' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // 验证用户是否是群组成员
+    const isMember = await checkGroupMembership(db, groupId, userPayload.userId);
+    if (!isMember) {
+      return c.json({ error: 'You are not a member of this group' }, 403);
+    }
+
+    // 获取群组信息
+    const [group] = await db
+      .select()
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .limit(1);
+
+    if (!group) {
+      return c.json({ error: 'Group not found' }, 404);
+    }
+
+    // 获取群组成员
+    const members = await db
+      .select({
+        userId: groupMembers.userId,
+        showKiss: groupMembers.showKiss,
+        joinedAt: groupMembers.joinedAt,
+        username: users.username,
+      })
+      .from(groupMembers)
+      .innerJoin(users, eq(groupMembers.userId, users.id))
+      .where(eq(groupMembers.groupId, groupId));
+
+    return c.json({
+      group: {
+        ...group,
+        members,
+      },
+    });
+  } catch (error) {
+    console.error('Get group error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// POST /api/groups/:id/leave - 离开群组
+groupRoutes.post('/:id/leave', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const groupId = parseInt(c.req.param('id'));
+    if (isNaN(groupId)) {
+      return c.json({ error: 'Invalid group ID' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // 验证用户是否是群组成员
+    const isMember = await checkGroupMembership(db, groupId, userPayload.userId);
+    if (!isMember) {
+      return c.json({ error: 'You are not a member of this group' }, 404);
+    }
+
+    // 删除成员关系
+    await db
+      .delete(groupMembers)
+      .where(
+        and(
+          eq(groupMembers.groupId, groupId),
+          eq(groupMembers.userId, userPayload.userId)
+        )
+      );
+
+    // 检查群组是否还有成员
+    const remainingMembers = await db
+      .select()
+      .from(groupMembers)
+      .where(eq(groupMembers.groupId, groupId));
+
+    // 如果没有成员了，删除群组
+    if (remainingMembers.length === 0) {
+      await db.delete(groups).where(eq(groups.id, groupId));
+      return c.json({ message: 'Left group successfully. Group was deleted as it had no members.' });
+    }
+
+    return c.json({ message: 'Left group successfully' });
+  } catch (error) {
+    console.error('Leave group error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// DELETE /api/groups/:id - 删除群组
+groupRoutes.delete('/:id', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const groupId = parseInt(c.req.param('id'));
+    if (isNaN(groupId)) {
+      return c.json({ error: 'Invalid group ID' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // 验证群组是否存在
+    const [group] = await db
+      .select()
+      .from(groups)
+      .where(eq(groups.id, groupId))
+      .limit(1);
+
+    if (!group) {
+      return c.json({ error: 'Group not found' }, 404);
+    }
+
+    // 删除所有群组成员关系
+    await db.delete(groupMembers).where(eq(groupMembers.groupId, groupId));
+
+    // 删除群组
+    await db.delete(groups).where(eq(groups.id, groupId));
+
+    return c.json({ message: 'Group deleted successfully' });
+  } catch (error) {
+    console.error('Delete group error:', error);
+    return c.json({ error: 'Internal server error' }, 500);
+  }
+});
+
+// DELETE /api/groups/:id/members/:userId - 移除群组成员
+groupRoutes.delete('/:id/members/:userId', async (c) => {
+  try {
+    const userPayload = c.get('user');
+    if (!userPayload) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+
+    const groupId = parseInt(c.req.param('id'));
+    const targetUserId = parseInt(c.req.param('userId'));
+
+    if (isNaN(groupId)) {
+      return c.json({ error: 'Invalid group ID' }, 400);
+    }
+
+    if (isNaN(targetUserId)) {
+      return c.json({ error: 'Invalid user ID' }, 400);
+    }
+
+    const db = c.get('db');
+
+    // 验证请求用户是否是群组成员
+    const isRequesterMember = await checkGroupMembership(db, groupId, userPayload.userId);
+    if (!isRequesterMember) {
+      return c.json({ error: 'You are not a member of this group' }, 403);
+    }
+
+    // 验证目标用户是否是群组成员
+    const isTargetMember = await checkGroupMembership(db, groupId, targetUserId);
+    if (!isTargetMember) {
+      return c.json({ error: 'Target user is not a member of this group' }, 404);
+    }
+
+    // 删除成员关系
+    await db
+      .delete(groupMembers)
+      .where(
+        and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, targetUserId))
+      );
+
+    // 检查群组是否还有成员
+    const remainingMembers = await db
+      .select()
+      .from(groupMembers)
+      .where(eq(groupMembers.groupId, groupId));
+
+    // 如果没有成员了，删除群组
+    if (remainingMembers.length === 0) {
+      await db.delete(groups).where(eq(groups.id, groupId));
+      return c.json({ message: 'Member removed successfully. Group was deleted as it had no members.' });
+    }
+
+    return c.json({ message: 'Member removed successfully' });
+  } catch (error) {
+    console.error('Remove group member error:', error);
     return c.json({ error: 'Internal server error' }, 500);
   }
 });
