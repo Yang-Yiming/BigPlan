@@ -5,8 +5,9 @@ interface KissFormProps {
   reflection?: KissReflection | null;
   selectedDate: string;
   unlockStatus: KissUnlockStatus;
-  onSubmit: (data: KissFormData) => Promise<void>;
+  onSubmit?: (data: KissFormData) => Promise<void>;
   onPlanNextDay?: () => void;
+  readOnly?: boolean;
 }
 
 export interface KissFormData {
@@ -23,6 +24,7 @@ export function KissForm({
   unlockStatus,
   onSubmit,
   onPlanNextDay,
+  readOnly = false,
 }: KissFormProps) {
   const [keep, setKeep] = useState(reflection?.keep || '');
   const [improve, setImprove] = useState(reflection?.improve || '');
@@ -51,6 +53,11 @@ export function KissForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (readOnly || !onSubmit) {
+      return;
+    }
+
     setError('');
     setSuccessMessage('');
 
@@ -84,7 +91,7 @@ export function KissForm({
     }
   };
 
-  const isDisabled = !unlockStatus.isUnlocked || isLoading;
+  const isDisabled = readOnly || !unlockStatus.isUnlocked || isLoading;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -212,25 +219,27 @@ export function KissForm({
         </div>
 
         {/* Form Actions */}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={isDisabled}
-            className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? '保存中...' : reflection ? '更新复盘' : '保存复盘'}
-          </button>
-
-          {unlockStatus.isUnlocked && onPlanNextDay && (
+        {!readOnly && (
+          <div className="flex gap-3">
             <button
-              type="button"
-              onClick={onPlanNextDay}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              type="submit"
+              disabled={isDisabled}
+              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              规划明天任务
+              {isLoading ? '保存中...' : reflection ? '更新复盘' : '保存复盘'}
             </button>
-          )}
-        </div>
+
+            {unlockStatus.isUnlocked && onPlanNextDay && (
+              <button
+                type="button"
+                onClick={onPlanNextDay}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                规划明天任务
+              </button>
+            )}
+          </div>
+        )}
       </form>
     </div>
   );

@@ -3,35 +3,37 @@ import type { Task } from '../types';
 
 interface TaskCardProps {
   task: Task;
-  onUpdate: (taskId: number, progressValue: number) => Promise<void>;
-  onEdit: (task: Task) => void;
-  onDelete: (taskId: number) => Promise<void>;
+  onUpdate?: (taskId: number, progressValue: number) => Promise<void>;
+  onEdit?: (task: Task) => void;
+  onDelete?: (taskId: number) => Promise<void>;
 }
 
 export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const isReadOnly = !onUpdate || !onEdit || !onDelete;
+
   const handleProgressClick = async () => {
-    if (task.progressType === 'boolean') {
+    if (task.progressType === 'boolean' && onUpdate) {
       const newValue = task.progressValue === 0 ? 1 : 0;
       await onUpdate(task.id, newValue);
     }
   };
 
   const handleNumericChange = async (value: number) => {
-    if (task.maxProgress && value <= task.maxProgress && value >= 0) {
+    if (onUpdate && task.maxProgress && value <= task.maxProgress && value >= 0) {
       await onUpdate(task.id, value);
     }
   };
 
   const handlePercentageChange = async (value: number) => {
-    if (value <= 100 && value >= 0) {
+    if (onUpdate && value <= 100 && value >= 0) {
       await onUpdate(task.id, value);
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm('确定要删除这个任务吗？')) {
+    if (onDelete && window.confirm('确定要删除这个任务吗？')) {
       setIsDeleting(true);
       try {
         await onDelete(task.id);
@@ -47,11 +49,12 @@ export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
         return (
           <button
             onClick={handleProgressClick}
+            disabled={isReadOnly}
             className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
               task.progressValue === 1
                 ? 'bg-green-500 border-green-500'
                 : 'bg-white border-gray-300 hover:border-green-500'
-            }`}
+            } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
             aria-label="Toggle completion"
           >
             {task.progressValue === 1 && (
@@ -75,94 +78,10 @@ export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
       case 'numeric':
         return (
           <div className="flex items-center gap-2">
-            <button
-              onClick={() =>
-                handleNumericChange(Math.max(0, task.progressValue - 1))
-              }
-              className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
-              aria-label="Decrease progress"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M20 12H4"
-                />
-              </svg>
-            </button>
-            <div className="flex gap-1">
-              {Array.from({ length: task.maxProgress || 0 }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleNumericChange(index + 1)}
-                  className={`w-6 h-6 rounded border-2 transition-colors ${
-                    index < task.progressValue
-                      ? 'bg-blue-500 border-blue-500'
-                      : 'bg-white border-gray-300 hover:border-blue-500'
-                  }`}
-                  aria-label={`Set progress to ${index + 1}`}
-                />
-              ))}
-            </div>
-            <span className="text-sm text-gray-600 min-w-[60px]">
-              {task.progressValue} / {task.maxProgress}
-            </span>
-            <button
-              onClick={() =>
-                handleNumericChange(
-                  Math.min(task.maxProgress || 0, task.progressValue + 1)
-                )
-              }
-              className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
-              aria-label="Increase progress"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-            </button>
-          </div>
-        );
-
-      case 'percentage':
-        const percentage = task.maxProgress
-          ? (task.progressValue / task.maxProgress) * 100
-          : 0;
-        return (
-          <div className="flex-1 flex items-center gap-3">
-            <div className="flex-1 bg-gray-200 rounded-full h-3 relative overflow-hidden">
-              <div
-                className="bg-blue-500 h-full transition-all duration-300 rounded-full"
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-            <span className="text-sm text-gray-600 min-w-[50px]">
-              {Math.round(percentage)}%
-            </span>
-            <div className="flex gap-1">
+            {!isReadOnly && (
               <button
                 onClick={() =>
-                  handlePercentageChange(
-                    Math.max(
-                      0,
-                      task.progressValue - (task.maxProgress || 100) / 10
-                    )
-                  )
+                  handleNumericChange(Math.max(0, task.progressValue - 1))
                 }
                 className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
                 aria-label="Decrease progress"
@@ -181,13 +100,30 @@ export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
                   />
                 </svg>
               </button>
+            )}
+            <div className="flex gap-1">
+              {Array.from({ length: task.maxProgress || 0 }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => !isReadOnly && handleNumericChange(index + 1)}
+                  disabled={isReadOnly}
+                  className={`w-6 h-6 rounded border-2 transition-colors ${
+                    index < task.progressValue
+                      ? 'bg-blue-500 border-blue-500'
+                      : 'bg-white border-gray-300 hover:border-blue-500'
+                  } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
+                  aria-label={`Set progress to ${index + 1}`}
+                />
+              ))}
+            </div>
+            <span className="text-sm text-gray-600 min-w-[60px]">
+              {task.progressValue} / {task.maxProgress}
+            </span>
+            {!isReadOnly && (
               <button
                 onClick={() =>
-                  handlePercentageChange(
-                    Math.min(
-                      task.maxProgress || 100,
-                      task.progressValue + (task.maxProgress || 100) / 10
-                    )
+                  handleNumericChange(
+                    Math.min(task.maxProgress || 0, task.progressValue + 1)
                   )
                 }
                 className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
@@ -207,7 +143,81 @@ export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
                   />
                 </svg>
               </button>
+            )}
+          </div>
+        );
+
+      case 'percentage':
+        const percentage = task.maxProgress
+          ? (task.progressValue / task.maxProgress) * 100
+          : 0;
+        return (
+          <div className="flex-1 flex items-center gap-3">
+            <div className="flex-1 bg-gray-200 rounded-full h-3 relative overflow-hidden">
+              <div
+                className="bg-blue-500 h-full transition-all duration-300 rounded-full"
+                style={{ width: `${percentage}%` }}
+              />
             </div>
+            <span className="text-sm text-gray-600 min-w-[50px]">
+              {Math.round(percentage)}%
+            </span>
+            {!isReadOnly && (
+              <div className="flex gap-1">
+                <button
+                  onClick={() =>
+                    handlePercentageChange(
+                      Math.max(
+                        0,
+                        task.progressValue - (task.maxProgress || 100) / 10
+                      )
+                    )
+                  }
+                  className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                  aria-label="Decrease progress"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20 12H4"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={() =>
+                    handlePercentageChange(
+                      Math.min(
+                        task.maxProgress || 100,
+                        task.progressValue + (task.maxProgress || 100) / 10
+                      )
+                    )
+                  }
+                  className="w-7 h-7 rounded bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors"
+                  aria-label="Increase progress"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         );
     }
@@ -223,47 +233,49 @@ export function TaskCard({ task, onUpdate, onEdit, onDelete }: TaskCardProps) {
         <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
             <h3 className="text-lg font-medium text-gray-900">{task.title}</h3>
-            <div className="flex gap-2 ml-2">
-              <button
-                onClick={() => onEdit(task)}
-                className="text-gray-400 hover:text-blue-600 transition-colors"
-                aria-label="Edit task"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            {!isReadOnly && (
+              <div className="flex gap-2 ml-2">
+                <button
+                  onClick={() => onEdit!(task)}
+                  className="text-gray-400 hover:text-blue-600 transition-colors"
+                  aria-label="Edit task"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                aria-label="Delete task"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                  aria-label="Delete task"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </div>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
 
           {task.description && (

@@ -16,6 +16,14 @@ export const taskService = {
     return response.data.tasks;
   },
 
+  // Get tasks by date for a specific user (group member)
+  async getUserTasksByDate(userId: number, date: string): Promise<Task[]> {
+    const response = await apiClient.get<TasksResponse>(`/users/${userId}/tasks`, {
+      params: { date },
+    });
+    return response.data.tasks;
+  },
+
   // Get a single task
   async getTask(id: number): Promise<Task> {
     const response = await apiClient.get<TaskResponse>(`/tasks/${id}`);

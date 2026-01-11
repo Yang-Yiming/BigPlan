@@ -4,3 +4,4 @@ export { DatePicker } from './DatePicker';
 export { TaskCard } from './TaskCard';
 export { TaskForm } from './TaskForm';
 export { KissForm } from './KissForm';
+export { MemberAvatarList } from './MemberAvatarList';

@@ -16,9 +16,25 @@ export const kissService = {
     return response.data.reflection;
   },
 
+  // Get KISS reflection by date for a specific user (group member)
+  async getUserReflectionByDate(userId: number, date: string): Promise<KissReflection | null> {
+    const response = await apiClient.get<KissReflectionResponse>(`/users/${userId}/kiss`, {
+      params: { date },
+    });
+    return response.data.reflection;
+  },
+
   // Check if KISS reflection is unlocked for a specific date
   async checkUnlockStatus(date: string): Promise<KissUnlockStatus> {
     const response = await apiClient.get<KissUnlockStatus>('/kiss/check-unlock', {
+      params: { date },
+    });
+    return response.data;
+  },
+
+  // Check unlock status for a specific user
+  async checkUserUnlockStatus(userId: number, date: string): Promise<KissUnlockStatus> {
+    const response = await apiClient.get<KissUnlockStatus>(`/users/${userId}/kiss/check-unlock`, {
       params: { date },
     });
     return response.data;
