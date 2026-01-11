@@ -8,6 +8,11 @@ import {
   KissForm,
   MemberAvatarList,
   CommentList,
+  TopNavbar,
+  TaskListSkeleton,
+  KissFormSkeleton,
+  EmptyState,
+  EmptyStateIcons,
 } from '../components';
 import { taskService } from '../services/task.service';
 import { kissService } from '../services/kiss.service';
@@ -32,6 +37,7 @@ export function HomePage() {
   const [error, setError] = useState('');
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   // KISS reflection state
   const [kissReflection, setKissReflection] = useState<KissReflection | null>(null);
@@ -41,6 +47,7 @@ export function HomePage() {
     completedTasks: 0,
     canRetroactivelyFill: false,
   });
+  const [kissLoading, setKissLoading] = useState(false);
 
   // Group state
   const [currentGroup, setCurrentGroup] = useState<Group | null>(null);
@@ -48,7 +55,6 @@ export function HomePage() {
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [memberKissSettings, setMemberKissSettings] = useState<Map<number, boolean>>(new Map());
   const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
-  const [showGroupSelector, setShowGroupSelector] = useState(false);
 
   // Check if user came from group management page with a group ID
   useEffect(() => {
@@ -93,7 +99,6 @@ export function HomePage() {
 
   const handleGroupChange = (groupId: number) => {
     loadGroup(groupId);
-    setShowGroupSelector(false);
     setSelectedMemberId(null); // Reset to viewing own data
   };
 
@@ -119,6 +124,7 @@ export function HomePage() {
   };
 
   const fetchKissReflection = async (date: string, userId?: number) => {
+    setKissLoading(true);
     try {
       const reflection = userId
         ? await kissService.getUserReflectionByDate(userId, date)
@@ -127,6 +133,8 @@ export function HomePage() {
     } catch (err) {
       console.error('Failed to fetch KISS reflection:', err);
       setError('加载复盘失败');
+    } finally {
+      setKissLoading(false);
     }
   };
 
@@ -154,6 +162,7 @@ export function HomePage() {
 
   const handleMemberSelect = (memberId: number | null) => {
     setSelectedMemberId(memberId);
+    setShowMobileSidebar(false); // Close sidebar on mobile after selection
   };
 
   const handleToggleKiss = (userId: number) => {
@@ -242,86 +251,63 @@ export function HomePage() {
   const showKissTab = isViewingOwnData || memberKissSettings.get(selectedMemberId!);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Left sidebar - Member avatars (only show when in a group) */}
+    <div className="min-h-screen bg-secondary-50">
+      {/* Top Navigation */}
+      <TopNavbar
+        username={user?.username || ''}
+        currentGroup={currentGroup}
+        availableGroups={availableGroups}
+        isViewingOwnData={isViewingOwnData}
+        currentViewUsername={currentViewUsername}
+        onGroupChange={handleGroupChange}
+        onLogout={handleLogout}
+        onMobileMenuToggle={() => setShowMobileSidebar(!showMobileSidebar)}
+      />
+
+      {/* Mobile Sidebar Overlay */}
+      {showMobileSidebar && currentGroup && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden animate-fade-in"
+          onClick={() => setShowMobileSidebar(false)}
+        >
+          <div
+            className="bg-white w-64 h-full shadow-xl animate-slide-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">成员列表</h2>
+            </div>
+            <MemberAvatarList
+              members={groupMembers}
+              currentUserId={user?.id || null}
+              selectedMemberId={selectedMemberId}
+              onMemberSelect={handleMemberSelect}
+              memberKissSettings={memberKissSettings}
+              onToggleKiss={handleToggleKiss}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar - Member avatars (only show when in a group) */}
       {currentGroup && (
-        <MemberAvatarList
-          members={groupMembers}
-          currentUserId={user?.id || null}
-          selectedMemberId={selectedMemberId}
-          onMemberSelect={handleMemberSelect}
-          memberKissSettings={memberKissSettings}
-          onToggleKiss={handleToggleKiss}
-        />
+        <div className="hidden md:block">
+          <MemberAvatarList
+            members={groupMembers}
+            currentUserId={user?.id || null}
+            selectedMemberId={selectedMemberId}
+            onMemberSelect={handleMemberSelect}
+            memberKissSettings={memberKissSettings}
+            onToggleKiss={handleToggleKiss}
+          />
+        </div>
       )}
 
       {/* Main content - offset when sidebar is visible */}
-      <div className={currentGroup ? 'ml-20' : ''}>
-        <nav className="bg-white shadow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center gap-4">
-                <h1 className="text-2xl font-bold text-gray-900">BigPlans</h1>
-                {currentGroup && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowGroupSelector(!showGroupSelector)}
-                      className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
-                    >
-                      <span className="text-sm font-medium">{currentGroup.name}</span>
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                    {showGroupSelector && availableGroups.length > 1 && (
-                      <div className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[200px] z-50">
-                        {availableGroups.map(group => (
-                          <button
-                            key={group.id}
-                            onClick={() => handleGroupChange(group.id)}
-                            className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-sm ${
-                              group.id === currentGroup?.id ? 'bg-blue-50 text-blue-700' : ''
-                            }`}
-                          >
-                            {group.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-4">
-                {!currentGroup && (
-                  <button
-                    onClick={() => navigate('/groups')}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                  >
-                    群组管理
-                  </button>
-                )}
-                <span className="text-gray-700">
-                  欢迎, <span className="font-medium">{user?.username}</span>
-                  {!isViewingOwnData && (
-                    <span className="ml-2 text-sm text-blue-600">
-                      (正在查看 {currentViewUsername} 的数据)
-                    </span>
-                  )}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
-                >
-                  退出登录
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`pt-16 ${currentGroup ? 'md:ml-20' : ''}`}>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           {/* Date Picker */}
-          <div className="mb-6">
+          <div className="mb-6 animate-slide-up">
             <DatePicker
               selectedDate={selectedDate}
               onDateChange={handleDateChange}
@@ -329,60 +315,69 @@ export function HomePage() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="mb-6 border-b border-gray-200">
-            <nav className="-mb-px flex gap-8">
+          <div className="mb-6 border-b border-gray-200 animate-slide-up">
+            <nav className="-mb-px flex gap-4 md:gap-8 overflow-x-auto">
               <button
                 onClick={() => setActiveTab('tasks')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 md:py-4 px-2 border-b-2 font-medium text-sm md:text-base transition-all duration-300 whitespace-nowrap ${
                   activeTab === 'tasks'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-primary-500 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                任务列表
+                📝 任务列表
               </button>
               {showKissTab && (
                 <button
                   onClick={() => setActiveTab('kiss')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors relative ${
+                  className={`py-3 md:py-4 px-2 border-b-2 font-medium text-sm md:text-base transition-all duration-300 relative whitespace-nowrap ${
                     activeTab === 'kiss'
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  KISS 复盘
+                  🎯 KISS 复盘
                   {!kissUnlockStatus.isUnlocked && (
-                    <span className="ml-2 inline-block w-2 h-2 bg-yellow-500 rounded-full"></span>
+                    <span className="ml-2 inline-block w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
                   )}
                 </button>
               )}
               <button
                 onClick={() => setActiveTab('comments')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`py-3 md:py-4 px-2 border-b-2 font-medium text-sm md:text-base transition-all duration-300 whitespace-nowrap ${
                   activeTab === 'comments'
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-primary-500 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                全天评论
+                💬 全天评论
               </button>
             </nav>
           </div>
 
+          {/* Error Alert */}
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              {error}
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-3 animate-slide-up">
+              <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">{error}</div>
+              <button onClick={() => setError('')} className="text-red-700 hover:text-red-900">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
             </div>
           )}
 
           {/* Tasks Tab Content */}
           {activeTab === 'tasks' && (
-            <>
+            <div className="animate-fade-in">
               {isViewingOwnData && (
-                <div className="mb-6 flex items-center justify-end">
+                <div className="mb-6 flex items-center justify-between md:justify-end">
                   <button
                     onClick={handleCreateTask}
-                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                    className="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium shadow-sm hover:shadow-md"
                   >
                     <svg
                       className="w-5 h-5"
@@ -397,39 +392,24 @@ export function HomePage() {
                         d="M12 4v16m8-8H4"
                       />
                     </svg>
-                    创建任务
+                    <span className="hidden sm:inline">创建任务</span>
+                    <span className="sm:hidden">创建</span>
                   </button>
                 </div>
               )}
 
               {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                </div>
+                <TaskListSkeleton count={3} />
               ) : tasks.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-12 text-center">
-                  <svg
-                    className="w-16 h-16 text-gray-400 mx-auto mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                  <p className="text-gray-500 text-lg mb-2">
-                    {isViewingOwnData ? '这一天还没有任务' : `${currentViewUsername} 这一天还没有任务`}
-                  </p>
-                  {isViewingOwnData && (
-                    <p className="text-gray-400 text-sm">
-                      点击"创建任务"按钮添加你的第一个任务
-                    </p>
-                  )}
-                </div>
+                <EmptyState
+                  icon={EmptyStateIcons.Tasks}
+                  title={isViewingOwnData ? '这一天还没有任务' : `${currentViewUsername} 这一天还没有任务`}
+                  description={isViewingOwnData ? '点击"创建任务"按钮添加你的第一个任务，开始高效的一天！' : undefined}
+                  action={isViewingOwnData ? {
+                    label: '创建任务',
+                    onClick: handleCreateTask,
+                  } : undefined}
+                />
               ) : (
                 <div className="space-y-4">
                   {tasks.map((task) => (
@@ -446,31 +426,40 @@ export function HomePage() {
                   ))}
                 </div>
               )}
-            </>
+            </div>
           )}
 
           {/* KISS Tab Content */}
           {activeTab === 'kiss' && showKissTab && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 animate-fade-in">
               {!isViewingOwnData && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-blue-700 text-sm">
-                  正在查看 {currentViewUsername} 的 KISS 复盘
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm flex items-center gap-2">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                  <span>正在查看 <strong>{currentViewUsername}</strong> 的 KISS 复盘</span>
                 </div>
               )}
-              <KissForm
-                reflection={kissReflection}
-                selectedDate={selectedDate}
-                unlockStatus={kissUnlockStatus}
-                onSubmit={isViewingOwnData ? handleKissFormSubmit : undefined}
-                onPlanNextDay={isViewingOwnData ? handlePlanNextDay : undefined}
-              />
+              {kissLoading ? (
+                <KissFormSkeleton />
+              ) : (
+                <KissForm
+                  reflection={kissReflection}
+                  selectedDate={selectedDate}
+                  unlockStatus={kissUnlockStatus}
+                  onSubmit={isViewingOwnData ? handleKissFormSubmit : undefined}
+                  onPlanNextDay={isViewingOwnData ? handlePlanNextDay : undefined}
+                />
+              )}
             </div>
           )}
 
           {/* Comments Tab Content */}
           {activeTab === 'comments' && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 animate-fade-in">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 flex items-center gap-2">
+                <span>💬</span>
                 {isViewingOwnData
                   ? '全天评论'
                   : `${currentViewUsername} 的全天评论`}
