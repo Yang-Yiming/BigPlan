@@ -1,6 +1,6 @@
 import type { DbClient } from '../../db/client';
 import { tasks, type Task } from '../../db/schema/tasks';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export interface RecurrencePattern {
   frequency: 'daily' | 'weekly' | 'monthly';
