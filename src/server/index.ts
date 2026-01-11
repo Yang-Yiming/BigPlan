@@ -8,6 +8,7 @@ import { taskRoutes } from './routes/tasks';
 import { reflectionRoutes } from './routes/reflections';
 import { kissRoutes } from './routes/kiss';
 import { groupRoutes } from './routes/groups';
+import { commentRoutes } from './routes/comments';
 
 const app = new Hono<{
   Variables: {
@@ -40,5 +41,6 @@ app.route('/api/tasks', taskRoutes);
 app.route('/api/reflections', reflectionRoutes);
 app.route('/api/kiss', kissRoutes);
 app.route('/api/groups', groupRoutes);
+app.route('/api/comments', commentRoutes);
 
 export default app;
