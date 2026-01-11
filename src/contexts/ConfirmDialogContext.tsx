@@ -96,7 +96,7 @@ export const ConfirmDialogProvider: React.FC<{ children: React.ReactNode }> = ({
         <div className="fixed inset-0 z-[200] overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div
-              className="fixed inset-0 bg-black bg-opacity-30 transition-opacity"
+              className="fixed inset-0 modal-backdrop-light transition-opacity"
               onClick={handleCancel}
             />
 

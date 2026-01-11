@@ -145,7 +145,7 @@ export function MemberAvatarList({
         })}
 
       {/* 设置按钮 */}
-      <div className="mt-auto pt-4 border-t border-gray-300 w-full flex justify-center">
+      <div className="mt-auto pt-4 border-t border-gray-300 w-full flex justify-center relative">
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors flex items-center justify-center"
@@ -153,30 +153,29 @@ export function MemberAvatarList({
         >
           ⚙️
         </button>
-      </div>
 
-      {/* 设置面板（简化版，后续可扩展） */}
-      {showSettings && (
-        <div className="absolute left-full ml-2 bottom-4 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-48 z-50">
-          <div className="text-sm font-semibold mb-2">群组设置</div>
-          <button
-            onClick={() => {
-              setShowSettings(false);
-              // 这里可以跳转到群组管理页面
-              window.location.href = '/groups';
-            }}
-            className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm"
-          >
-            管理群组
-          </button>
-          <button
-            onClick={() => setShowSettings(false)}
-            className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-gray-600 mt-1"
-          >
-            关闭
-          </button>
-        </div>
-      )}
+        {/* 设置面板 */}
+        {showSettings && (
+          <div className="fixed left-20 bottom-4 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-48 z-50 animate-scale-in">
+            <div className="text-sm font-semibold mb-2 text-gray-900">群组设置</div>
+            <button
+              onClick={() => {
+                setShowSettings(false);
+                window.location.href = '/groups';
+              }}
+              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-gray-900"
+            >
+              管理群组
+            </button>
+            <button
+              onClick={() => setShowSettings(false)}
+              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-gray-600 mt-1"
+            >
+              关闭
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

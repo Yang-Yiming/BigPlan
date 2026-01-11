@@ -266,7 +266,7 @@ export function HomePage() {
       {/* Mobile Sidebar Overlay */}
       {showMobileSidebar && currentGroup && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden animate-fade-in"
+          className="fixed inset-0 modal-backdrop z-30 md:hidden animate-fade-in"
           onClick={() => setShowMobileSidebar(false)}
         >
           <div

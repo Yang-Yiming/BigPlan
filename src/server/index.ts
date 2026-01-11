@@ -18,10 +18,17 @@ const app = new Hono<{
 
 app.use('*', logger());
 
+// Parse CORS origins from environment variable
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
+console.log('CORS allowed origins:', allowedOrigins);
+
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
   })
 );

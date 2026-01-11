@@ -248,11 +248,6 @@ export function GroupManagePage() {
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-800 mb-1">
                         {group.name}
-                        {group.ownerId === user?.id && (
-                          <span className="ml-2 text-sm text-yellow-600">
-                            👑 群主
-                          </span>
-                        )}
                       </h3>
                       {group.description && (
                         <p className="text-sm text-gray-600 mb-3">
@@ -261,7 +256,7 @@ export function GroupManagePage() {
                       )}
                       <p className="text-xs text-gray-400">
                         创建于{' '}
-                        {new Date(group.createdAt).toLocaleDateString('zh-CN')}
+                        {new Date(group.createdAt).toLocaleDateString('zh-CN')} · 成员可互相督促
                       </p>
                     </div>
                     <div className="flex space-x-2">
@@ -273,32 +268,18 @@ export function GroupManagePage() {
                       >
                         进入
                       </button>
-                      {group.ownerId === user?.id && (
-                        <>
-                          <button
-                            onClick={() => handleGenerateInvite(group.id)}
-                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
-                          >
-                            邀请
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleDeleteGroup(group.id, group.name)
-                            }
-                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
-                          >
-                            删除
-                          </button>
-                        </>
-                      )}
-                      {group.ownerId !== user?.id && (
-                        <button
-                          onClick={() => handleLeaveGroup(group.id, group.name)}
-                          className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm"
-                        >
-                          退出
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleGenerateInvite(group.id)}
+                        className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                      >
+                        邀请
+                      </button>
+                      <button
+                        onClick={() => handleLeaveGroup(group.id, group.name)}
+                        className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm"
+                      >
+                        退出
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -393,8 +374,8 @@ export function GroupManagePage() {
 
         {/* 邀请码弹窗 */}
         {generatedInvite && selectedGroupForInvite && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 animate-fade-in">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 animate-scale-in">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 群组邀请码
               </h3>

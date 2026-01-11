@@ -6,33 +6,36 @@ export const commentService = {
    * 获取评论列表
    */
   async getComments(filters?: CommentFilters): Promise<Comment[]> {
-    const params = new URLSearchParams();
+    // 如果是全天评论，使用 /daily 端点
+    if (filters?.isDailyComment) {
+      const params = new URLSearchParams();
 
+      if (filters.targetUserId) {
+        params.append('userId', filters.targetUserId.toString());
+      }
+      if (filters.date) {
+        params.append('date', filters.date);
+      }
+
+      const response = await apiClient.get<Comment[]>(`/comments/daily?${params.toString()}`);
+      return response.data;
+    }
+
+    // 如果是任务评论，使用 /task/:taskId 端点
     if (filters?.taskId) {
-      params.append('taskId', filters.taskId.toString());
-    }
-    if (filters?.date) {
-      params.append('date', filters.date);
-    }
-    if (filters?.targetUserId) {
-      params.append('targetUserId', filters.targetUserId.toString());
-    }
-    if (filters?.isDailyComment !== undefined) {
-      params.append('isDailyComment', filters.isDailyComment.toString());
+      const response = await apiClient.get<Comment[]>(`/comments/task/${filters.taskId}`);
+      return response.data;
     }
 
-    const queryString = params.toString();
-    const url = queryString ? `/api/comments?${queryString}` : '/api/comments';
-
-    const response = await apiClient.get<Comment[]>(url);
-    return response.data;
+    // 默认返回空数组
+    return [];
   },
 
   /**
    * 创建评论
    */
   async createComment(data: NewComment): Promise<Comment> {
-    const response = await apiClient.post<Comment>('/api/comments', data);
+    const response = await apiClient.post<Comment>('/comments', data);
     return response.data;
   },
 
@@ -40,7 +43,7 @@ export const commentService = {
    * 更新评论
    */
   async updateComment(id: number, content: string): Promise<Comment> {
-    const response = await apiClient.put<Comment>(`/api/comments/${id}`, {
+    const response = await apiClient.put<Comment>(`/comments/${id}`, {
       content,
     });
     return response.data;
@@ -50,6 +53,6 @@ export const commentService = {
    * 删除评论
    */
   async deleteComment(id: number): Promise<void> {
-    await apiClient.delete(`/api/comments/${id}`);
+    await apiClient.delete(`/comments/${id}`);
   },
 };
