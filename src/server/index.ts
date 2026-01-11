@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { createLocalDb } from '../db/client';
 import type { DbClient } from '../db/client';
 import { authRoutes } from './routes/auth';
+import { taskRoutes } from './routes/tasks';
 
 const app = new Hono<{
   Variables: {
@@ -32,5 +33,6 @@ app.get('/', (c) => {
 });
 
 app.route('/api/auth', authRoutes);
+app.route('/api/tasks', taskRoutes);
 
 export default app;
