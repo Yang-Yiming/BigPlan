@@ -1,2 +1,4 @@
 // Export pages from this directory
-export {};
+export { HomePage } from './HomePage';
+export { LoginPage } from './LoginPage';
+export { RegisterPage } from './RegisterPage';

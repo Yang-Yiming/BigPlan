@@ -1,2 +1,2 @@
 // Export components from this directory
-export {};
+export { ProtectedRoute } from './ProtectedRoute';

@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { createLocalDb, DbClient } from '../db/client';
+import { createLocalDb } from '../db/client';
+import type { DbClient } from '../db/client';
 import { authRoutes } from './routes/auth';
 
 const app = new Hono<{

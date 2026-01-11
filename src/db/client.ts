@@ -33,7 +33,8 @@ export type DbClient = ReturnType<typeof createLocalDb>;
  *   }
  * }
  */
-export function createD1Db(d1: any) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+export function createD1Db(_d1: any) {
   // This will be implemented when setting up Cloudflare Workers
   // For now, this is a placeholder
   throw new Error('D1 client not implemented yet. Use in Worker context.');

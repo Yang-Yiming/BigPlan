@@ -1,6 +1,6 @@
-import { Context, Next } from 'hono';
-import { verifyToken, JwtPayload } from '../utils/jwt';
-import { DbClient } from '../../db/client';
+import type { Context, Next } from 'hono';
+import { verifyToken } from '../utils/jwt';
+import type { JwtPayload } from '../utils/jwt';
 
 export interface AuthContext {
   user: JwtPayload;
@@ -19,7 +19,7 @@ export async function authMiddleware(c: Context, next: Next) {
     const payload = verifyToken(token);
     c.set('user', payload);
     await next();
-  } catch (error) {
+  } catch {
     return c.json({ error: 'Unauthorized - Invalid token' }, 401);
   }
 }
