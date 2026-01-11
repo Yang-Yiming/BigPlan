@@ -7,6 +7,7 @@ export interface Group {
   name: string;
   description?: string | null;
   ownerId: number;
+  inviteCode?: string; // 群组邀请码
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -37,12 +38,9 @@ export interface GroupWithMembers extends Group {
 }
 
 export interface GroupInvite {
-  id: number;
   groupId: number;
   code: string;
-  createdById: number;
   expiresAt?: Date | string | null;
-  createdAt: Date | string;
 }
 
 export interface GroupMemberSettings {

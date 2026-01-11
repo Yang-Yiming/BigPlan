@@ -72,13 +72,18 @@ export const groupService = {
   },
 
   /**
-   * 生成群组邀请码
+   * 获取群组邀请码（从群组详情中获取）
    */
   async generateInviteCode(groupId: number): Promise<GroupInvite> {
-    const response = await apiClient.post<GroupInviteResponse>(
-      `/groups/${groupId}/invite`
-    );
-    return response.data.invite;
+    const response = await apiClient.get<GroupResponse>(`/groups/${groupId}`);
+    const group = response.data.group;
+
+    // 从群组详情中提取邀请码
+    return {
+      code: group.inviteCode || '',
+      groupId: group.id,
+      expiresAt: null, // 邀请码不过期
+    };
   },
 
   /**
