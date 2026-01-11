@@ -26,6 +26,7 @@ dist-ssr
 # Environment variables
 .env
 .env.local
+.env.production
 .dev.vars
 
 # Build artifacts
@@ -36,3 +37,8 @@ dist-ssr
 *.db-shm
 *.db-wal
 local.db
+
+# Test coverage
+coverage/
+.nyc_output/
+

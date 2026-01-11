@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 import { tasks } from './tasks';
@@ -22,7 +22,11 @@ export const comments = sqliteTable('comments', {
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  targetDateIdx: index('idx_comments_target_date').on(table.targetUserId, table.date),
+  taskIdx: index('idx_comments_task').on(table.taskId),
+  dailyIdx: index('idx_comments_daily').on(table.targetUserId, table.isDailyComment, table.date),
+}));
 
 export type Comment = typeof comments.$inferSelect;
 export type NewComment = typeof comments.$inferInsert;

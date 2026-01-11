@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
 
@@ -27,7 +27,11 @@ export const tasks = sqliteTable('tasks', {
   updatedAt: integer('updated_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  userDateIdx: index('idx_tasks_user_date').on(table.userId, table.date),
+  userRecurringIdx: index('idx_tasks_user_recurring').on(table.userId, table.isRecurring),
+  createdAtIdx: index('idx_tasks_created_at').on(table.createdAt),
+}));
 
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
