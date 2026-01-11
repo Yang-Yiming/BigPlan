@@ -1,58 +1,84 @@
-# BigPlans Backend
+# BigPlans
 
-Backend API for BigPlans project management application built with Hono, Cloudflare Workers D1, and Drizzle ORM.
+A modern full-stack project management application.
 
-## Setup
+## Frontend
 
-### Install dependencies
+Built with Vite, React, TypeScript, and Tailwind CSS.
+
+### Tech Stack
+
+- **Vite** - Fast build tool and dev server
+- **React 19** - UI library
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS v4** - Utility-first CSS framework
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+
+### Project Structure
+
+```
+src/
+├── components/   # Reusable React components
+├── pages/        # Page components
+├── hooks/        # Custom React hooks
+├── utils/        # Utility functions
+└── types/        # TypeScript type definitions
+```
+
+### Getting Started
+
+#### Install dependencies
+
 ```bash
 npm install
 ```
 
-### Create D1 Database
-```bash
-npx wrangler d1 create bigplans-db
-```
+#### Development
 
-Copy the database ID from the output and update `wrangler.toml`:
-```toml
-database_id = "your-database-id-here"
-```
-
-### Generate and run migrations
-```bash
-npm run db:generate
-npm run db:local
-```
-
-## Development
-
-Start the development server:
 ```bash
 npm run dev
 ```
 
-## Database Management
+#### Build
 
-- `npm run db:generate` - Generate migrations from schema
-- `npm run db:local` - Run migrations locally
-- `npm run db:migrate` - Run migrations on remote D1
-- `npm run db:studio` - Open Drizzle Studio
-
-## Deployment
-
-Deploy to Cloudflare Workers:
 ```bash
-npm run deploy
+npm run build
 ```
 
-## Project Structure
+#### Preview production build
 
+```bash
+npm run preview
 ```
-src/
-├── db/              # Database configuration and schema
-├── middleware/      # Hono middleware (CORS, logging, error handling)
-├── routes/          # API route handlers
-├── types/           # TypeScript type definitions
-└── index.ts         # Main application entry point
+
+### Code Quality
+
+#### Linting
+
+```bash
+# Check for linting errors
+npm run lint
+
+# Fix linting errors
+npm run lint:fix
 ```
+
+#### Formatting
+
+```bash
+# Check code formatting
+npm run format:check
+
+# Format code
+npm run format
+```
+
+### Configuration Files
+
+- `vite.config.ts` - Vite configuration
+- `tsconfig.json` - TypeScript configuration
+- `tailwind.config.js` - Tailwind CSS configuration
+- `postcss.config.js` - PostCSS configuration
+- `eslint.config.js` - ESLint configuration
+- `.prettierrc` - Prettier configuration
