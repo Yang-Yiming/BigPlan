@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { KissReflection, KissUnlockStatus } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 interface KissFormProps {
   reflection?: KissReflection | null;
@@ -33,6 +34,7 @@ export function KissForm({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const { showToast } = useToast();
 
   // Update form when reflection changes
   useEffect(() => {
@@ -83,9 +85,12 @@ export function KissForm({
         stop: stop.trim() || undefined,
       });
       setSuccessMessage('复盘保存成功！');
+      showToast('复盘保存成功！', 'success');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '保存失败，请重试');
+      const errorMsg = err instanceof Error ? err.message : '保存失败，请重试';
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setIsLoading(false);
     }

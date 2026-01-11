@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import type { Task } from '../types';
 import { CommentList } from './CommentList';
 import { commentService } from '../services/comment.service';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
 
 interface TaskCardProps {
   task: Task;
@@ -25,6 +27,8 @@ export function TaskCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
 
   const isReadOnly = !onUpdate || !onEdit || !onDelete;
 
@@ -61,29 +65,60 @@ export function TaskCard({
 
   const handleProgressClick = async () => {
     if (task.progressType === 'boolean' && onUpdate) {
-      const newValue = task.progressValue === 0 ? 1 : 0;
-      await onUpdate(task.id, newValue);
+      try {
+        const newValue = task.progressValue === 0 ? 1 : 0;
+        await onUpdate(task.id, newValue);
+        showToast(
+          newValue === 1 ? '任务已完成' : '任务已标记为未完成',
+          'success',
+          2000
+        );
+      } catch (error) {
+        showToast('更新进度失败', 'error');
+      }
     }
   };
 
   const handleNumericChange = async (value: number) => {
     if (onUpdate && task.maxProgress && value <= task.maxProgress && value >= 0) {
-      await onUpdate(task.id, value);
+      try {
+        await onUpdate(task.id, value);
+        showToast('进度已更新', 'success', 2000);
+      } catch (error) {
+        showToast('更新进度失败', 'error');
+      }
     }
   };
 
   const handlePercentageChange = async (value: number) => {
     if (onUpdate && value <= 100 && value >= 0) {
-      await onUpdate(task.id, value);
+      try {
+        await onUpdate(task.id, value);
+        showToast('进度已更新', 'success', 2000);
+      } catch (error) {
+        showToast('更新进度失败', 'error');
+      }
     }
   };
 
   const handleDelete = async () => {
-    if (onDelete && window.confirm('确定要删除这个任务吗？')) {
+    if (!onDelete) return;
+
+    const confirmed = await confirm({
+      title: '删除任务',
+      message: `确定要删除任务"${task.title}"吗？此操作无法撤销。`,
+      confirmText: '删除',
+      cancelText: '取消',
+      type: 'danger',
+    });
+
+    if (confirmed) {
       setIsDeleting(true);
       try {
         await onDelete(task.id);
+        showToast('任务已删除', 'success');
       } catch (error) {
+        showToast('删除任务失败', 'error');
         setIsDeleting(false);
       }
     }
@@ -148,19 +183,29 @@ export function TaskCard({
               </button>
             )}
             <div className="flex gap-1">
-              {Array.from({ length: task.maxProgress || 0 }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => !isReadOnly && handleNumericChange(index + 1)}
-                  disabled={isReadOnly}
-                  className={`w-6 h-6 rounded border-2 transition-colors ${
-                    index < task.progressValue
-                      ? 'bg-blue-500 border-blue-500'
-                      : 'bg-white border-gray-300 hover:border-blue-500'
-                  } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
-                  aria-label={`Set progress to ${index + 1}`}
-                />
-              ))}
+              {Array.from({ length: task.maxProgress || 0 }).map((_, index) => {
+                const isCompleted = index < task.progressValue;
+                return (
+                  <button
+                    key={index}
+                    onClick={() => !isReadOnly && handleNumericChange(index + 1)}
+                    disabled={isReadOnly}
+                    className={`
+                      w-6 h-6 rounded border-2 transition-all duration-300 ease-out
+                      ${isCompleted
+                        ? 'bg-blue-500 border-blue-500 scale-100'
+                        : 'bg-white border-gray-300 hover:border-blue-500 hover:scale-105'
+                      }
+                      ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}
+                      ${isCompleted ? 'shadow-sm' : ''}
+                    `}
+                    style={{
+                      transitionDelay: isCompleted ? `${index * 30}ms` : '0ms',
+                    }}
+                    aria-label={`Set progress to ${index + 1}`}
+                  />
+                );
+              })}
             </div>
             <span className="text-sm text-gray-600 min-w-[60px]">
               {task.progressValue} / {task.maxProgress}
@@ -199,13 +244,15 @@ export function TaskCard({
           : 0;
         return (
           <div className="flex-1 flex items-center gap-3">
-            <div className="flex-1 bg-gray-200 rounded-full h-3 relative overflow-hidden">
+            <div className="flex-1 bg-gray-200 rounded-full h-3 relative overflow-hidden shadow-inner">
               <div
-                className="bg-blue-500 h-full transition-all duration-300 rounded-full"
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500 ease-out rounded-full relative"
                 style={{ width: `${percentage}%` }}
-              />
+              >
+                <div className="absolute inset-0 bg-white opacity-20 animate-pulse" />
+              </div>
             </div>
-            <span className="text-sm text-gray-600 min-w-[50px]">
+            <span className="text-sm text-gray-600 min-w-[50px] font-medium">
               {Math.round(percentage)}%
             </span>
             {!isReadOnly && (

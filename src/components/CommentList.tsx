@@ -3,6 +3,8 @@ import type { Comment, NewComment, CommentFilters } from '../types/comment';
 import { commentService } from '../services/comment.service';
 import { CommentItem } from './CommentItem';
 import { CommentForm } from './CommentForm';
+import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmDialogContext';
 
 interface CommentListProps {
   filters: CommentFilters;
@@ -24,6 +26,8 @@ export function CommentList({
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
+  const { confirm } = useConfirm();
 
   // 加载评论
   const loadComments = useCallback(async () => {
@@ -57,29 +61,42 @@ export function CommentList({
 
   // 创建评论
   const handleCreateComment = async (content: string) => {
-    const newComment: NewComment = {
-      targetUserId: filters.targetUserId || currentUserId,
-      taskId: filters.taskId,
-      date: filters.date || new Date().toISOString().split('T')[0],
-      content,
-      isDailyComment: filters.isDailyComment || false,
-    };
+    try {
+      const newComment: NewComment = {
+        targetUserId: filters.targetUserId || currentUserId,
+        taskId: filters.taskId,
+        date: filters.date || new Date().toISOString().split('T')[0],
+        content,
+        isDailyComment: filters.isDailyComment || false,
+      };
 
-    await commentService.createComment(newComment);
-    await loadComments();
-    onCommentAdded?.();
+      await commentService.createComment(newComment);
+      await loadComments();
+      onCommentAdded?.();
+      showToast('评论已添加', 'success', 2000);
+    } catch (err) {
+      showToast('添加评论失败', 'error');
+    }
   };
 
   // 删除评论
   const handleDeleteComment = async (id: number) => {
-    if (!confirm('确定要删除这条评论吗？')) return;
+    const confirmed = await confirm({
+      title: '删除评论',
+      message: '确定要删除这条评论吗？',
+      confirmText: '删除',
+      cancelText: '取消',
+      type: 'warning',
+    });
+
+    if (!confirmed) return;
 
     try {
       await commentService.deleteComment(id);
       await loadComments();
+      showToast('评论已删除', 'success');
     } catch (err) {
-      console.error('删除评论失败:', err);
-      alert('删除评论失败，请重试');
+      showToast('删除评论失败', 'error');
     }
   };
 

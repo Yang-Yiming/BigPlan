@@ -5,6 +5,7 @@ import type {
   RecurrenceFrequency,
   RecurrencePattern,
 } from '../types';
+import { useToast } from '../contexts/ToastContext';
 
 interface TaskFormProps {
   task?: Task;
@@ -44,6 +45,7 @@ export function TaskForm({
   const [recurrenceInterval, setRecurrenceInterval] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (task?.recurrencePattern) {
@@ -91,12 +93,19 @@ export function TaskForm({
       };
 
       await onSubmit(formData);
+      showToast(
+        task ? '任务已更新' : '任务已创建',
+        'success'
+      );
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
         const error = err as { response?: { data?: { error?: string } } };
-        setError(error.response?.data?.error || '操作失败');
+        const errorMsg = error.response?.data?.error || '操作失败';
+        setError(errorMsg);
+        showToast(errorMsg, 'error');
       } else {
         setError('操作失败');
+        showToast('操作失败', 'error');
       }
     } finally {
       setIsLoading(false);
