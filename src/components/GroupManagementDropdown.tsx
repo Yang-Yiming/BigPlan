@@ -8,7 +8,6 @@ import { groupService } from '../services/group.service';
 import type { Group, GroupInvite } from '../types/group';
 
 interface GroupManagementDropdownProps {
-  currentUserId: number;
   onGroupSelected?: (groupId: number) => void;
   onGroupsUpdated?: () => void;
 }
@@ -16,7 +15,6 @@ interface GroupManagementDropdownProps {
 type TabType = 'list' | 'create' | 'join';
 
 export function GroupManagementDropdown({
-  currentUserId,
   onGroupSelected,
   onGroupsUpdated,
 }: GroupManagementDropdownProps) {

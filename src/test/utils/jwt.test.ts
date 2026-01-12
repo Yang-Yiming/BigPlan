@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { signToken, verifyToken } from '../../server/utils/jwt';
 import type { JwtPayload } from '../../server/utils/jwt';
 

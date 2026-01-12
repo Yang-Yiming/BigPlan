@@ -7,6 +7,9 @@ import { authMiddleware } from '../middleware/auth';
 import type { DbClient } from '../../db/client';
 
 export const authRoutes = new Hono<{
+  Bindings: {
+    JWT_SECRET: string;
+  };
   Variables: {
     db: DbClient;
     user?: { userId: number; username: string };
@@ -56,10 +59,11 @@ authRoutes.post('/register', async (c) => {
         createdAt: users.createdAt,
       });
 
+    const secret = c.env.JWT_SECRET || process.env.JWT_SECRET;
     const token = signToken({
       userId: newUser.id,
       username: newUser.username,
-    });
+    }, secret);
 
     return c.json(
       {
@@ -106,10 +110,11 @@ authRoutes.post('/login', async (c) => {
       return c.json({ error: 'Invalid username or password' }, 401);
     }
 
+    const secret = c.env.JWT_SECRET || process.env.JWT_SECRET;
     const token = signToken({
       userId: user.id,
       username: user.username,
-    });
+    }, secret);
 
     return c.json({
       message: 'Login successful',

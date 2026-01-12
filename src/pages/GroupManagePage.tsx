@@ -133,22 +133,6 @@ export function GroupManagePage() {
     }
   };
 
-  const handleDeleteGroup = async (groupId: number, groupName: string) => {
-    if (!confirm(`确定要删除群组 "${groupName}" 吗？此操作无法撤销！`)) return;
-
-    try {
-      setIsLoading(true);
-      setError('');
-      await groupService.deleteGroup(groupId);
-      setSuccessMessage('群组已删除');
-      await fetchGroups();
-    } catch (err: any) {
-      setError(err.response?.data?.message || '删除群组失败');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const copyInviteCode = () => {
     if (generatedInvite) {
       navigator.clipboard.writeText(generatedInvite.code);

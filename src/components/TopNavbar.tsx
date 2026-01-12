@@ -13,7 +13,6 @@ interface TopNavbarProps {
   availableGroups: Group[];
   isViewingOwnData: boolean;
   currentViewUsername?: string;
-  currentUserId: number;
   onGroupChange: (groupId: number) => void;
   onLogout: () => void;
   onMobileMenuToggle?: () => void;
@@ -26,7 +25,6 @@ export function TopNavbar({
   availableGroups,
   isViewingOwnData,
   currentViewUsername,
-  currentUserId,
   onGroupChange,
   onLogout,
   onMobileMenuToggle,
@@ -175,7 +173,6 @@ export function TopNavbar({
               {/* 群组管理下拉面板 */}
               {showGroupManagement && (
                 <GroupManagementDropdown
-                  currentUserId={currentUserId}
                   onGroupSelected={(groupId) => {
                     onGroupChange(groupId);
                     setShowGroupManagement(false);

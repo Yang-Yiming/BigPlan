@@ -6,7 +6,7 @@ export interface AuthContext {
   user: JwtPayload;
 }
 
-export async function authMiddleware(c: Context, next: Next) {
+export async function authMiddleware(c: Context<any>, next: Next) {
   const authHeader = c.req.header('Authorization');
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -14,9 +14,10 @@ export async function authMiddleware(c: Context, next: Next) {
   }
 
   const token = authHeader.substring(7);
+  const secret = c.env.JWT_SECRET || process.env.JWT_SECRET;
 
   try {
-    const payload = verifyToken(token);
+    const payload = verifyToken(token, secret);
     c.set('user', payload);
     await next();
   } catch {

@@ -318,7 +318,6 @@ export function HomePage() {
         availableGroups={availableGroups}
         isViewingOwnData={isViewingOwnData}
         currentViewUsername={currentViewUsername}
-        currentUserId={user!.id}
         onGroupChange={handleGroupChange}
         onLogout={handleLogout}
         onMobileMenuToggle={() => setShowMobileSidebar(!showMobileSidebar)}

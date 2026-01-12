@@ -24,10 +24,6 @@ interface GroupMembersResponse {
   members: GroupMember[];
 }
 
-interface GroupInviteResponse {
-  invite: GroupInvite;
-}
-
 export const groupService = {
   /**
    * 获取当前用户的所有群组

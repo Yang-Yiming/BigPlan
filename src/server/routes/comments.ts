@@ -33,8 +33,8 @@ async function checkSharedGroupMembership(
     .from(groupMembers)
     .where(eq(groupMembers.userId, userId2));
 
-  const user1GroupIds = new Set(user1Groups.map((g) => g.groupId));
-  const hasSharedGroup = user2Groups.some((g) => user1GroupIds.has(g.groupId));
+  const user1GroupIds = new Set(user1Groups.map((g: any) => g.groupId));
+  const hasSharedGroup = user2Groups.some((g: any) => user1GroupIds.has(g.groupId));
 
   return hasSharedGroup;
 }
@@ -228,7 +228,7 @@ commentRoutes.get('/task/:taskId', async (c) => {
       .where(eq(comments.taskId, taskId));
 
     // 格式化为包含嵌套 user 对象的结构
-    const formattedComments = taskComments.map((comment) => ({
+    const formattedComments = taskComments.map((comment: any) => ({
       id: comment.id,
       userId: comment.userId,
       targetUserId: comment.targetUserId,
@@ -324,7 +324,7 @@ commentRoutes.get('/daily', async (c) => {
       );
 
     // 格式化为包含嵌套 user 对象的结构
-    const formattedComments = dailyComments.map((comment) => ({
+    const formattedComments = dailyComments.map((comment: any) => ({
       id: comment.id,
       userId: comment.userId,
       targetUserId: comment.targetUserId,

@@ -60,7 +60,7 @@ async function checkReflectionUnlocked(
   }
 
   // 检查所有任务是否完成
-  const allTasksCompleted = todayTasks.every((task) => {
+  const allTasksCompleted = todayTasks.every((task: any) => {
     if (task.progressType === 'boolean') {
       return task.progressValue === 1;
     } else if (task.progressType === 'numeric' || task.progressType === 'percentage') {

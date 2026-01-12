@@ -25,7 +25,8 @@
     "db:push": "drizzle-kit push --config=drizzle.config.local.ts",
     "db:drop": "drizzle-kit drop --config=drizzle.config.local.ts",
     "wrangler:dev": "wrangler dev",
-    "wrangler:deploy": "wrangler deploy"
+    "wrangler:deploy": "wrangler deploy",
+    "wrangler:deploy:prod": "wrangler deploy --env production"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.8",

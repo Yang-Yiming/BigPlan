@@ -10,7 +10,6 @@ import type { Group, GroupInvite } from '../types/group';
 interface GroupManagementModalProps {
   isOpen: boolean;
   mode: 'list' | 'create' | 'join';
-  currentUserId: number;
   onClose: () => void;
   onGroupCreated?: () => void;
   onGroupJoined?: () => void;
@@ -20,7 +19,6 @@ interface GroupManagementModalProps {
 export function GroupManagementModal({
   isOpen,
   mode: initialMode,
-  currentUserId,
   onClose,
   onGroupCreated,
   onGroupJoined,

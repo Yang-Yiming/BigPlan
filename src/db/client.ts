@@ -1,11 +1,21 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
+import { drizzle as drizzleD1 } from 'drizzle-orm/d1';
 import * as schema from './schema';
+
+// Define D1Database type locally to avoid dependency issues if @cloudflare/workers-types is missing
+interface D1Database {
+  prepare(query: string): any;
+  dump(): Promise<ArrayBuffer>;
+  batch(statements: any[]): Promise<any[]>;
+  exec(query: string): Promise<any>;
+}
 
 /**
  * Local SQLite database client for development
  */
-export function createLocalDb(dbPath = './local.db') {
+export async function createLocalDb(dbPath = './local.db') {
+  // Use dynamic import for better-sqlite3 to avoid issues in Cloudflare environment
+  const { drizzle } = await import('drizzle-orm/better-sqlite3');
+  const Database = (await import('better-sqlite3')).default;
   const sqlite = new Database(dbPath);
   return drizzle(sqlite, { schema });
 }
@@ -13,29 +23,11 @@ export function createLocalDb(dbPath = './local.db') {
 /**
  * Type for the database client
  */
-export type DbClient = ReturnType<typeof createLocalDb>;
+export type DbClient = any;
 
 /**
  * Create D1 database client for Cloudflare Workers
- * Usage in Worker context:
- *
- * import { drizzle } from 'drizzle-orm/d1';
- * import * as schema from './schema';
- *
- * export interface Env {
- *   DB: D1Database;
- * }
- *
- * export default {
- *   async fetch(request: Request, env: Env) {
- *     const db = drizzle(env.DB, { schema });
- *     // Use db...
- *   }
- * }
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-export function createD1Db(_d1: any) {
-  // This will be implemented when setting up Cloudflare Workers
-  // For now, this is a placeholder
-  throw new Error('D1 client not implemented yet. Use in Worker context.');
+export function createD1Db(d1: D1Database) {
+  return drizzleD1(d1, { schema });
 }
