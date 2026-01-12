@@ -74,4 +74,32 @@ app.route('/api/groups', groupRoutes);
 app.route('/api/comments', commentRoutes);
 
 // Export for Cloudflare Workers
-export default app;
+const handler = {
+  async fetch(request: Request, env: Bindings, ctx: any) {
+    // 处理 API 请求
+    if (new URL(request.url).pathname.startsWith('/api/')) {
+      return app.fetch(request, env, ctx);
+    }
+
+    // 处理静态资源请求 (通过 env.ASSETS)
+    try {
+      // @ts-ignore - ASSETS binding provided by Cloudflare
+      if (env.ASSETS) {
+        // @ts-ignore
+        const asset = await env.ASSETS.fetch(request);
+        if (asset.status !== 404) return asset;
+        
+        // SPA Fallback: 如果资源没找到且不是 API，则返回 index.html
+        // @ts-ignore
+        return env.ASSETS.fetch(new URL('/index.html', request.url));
+      }
+    } catch (e) {
+      console.error('Assets fetch error:', e);
+    }
+    
+    return app.fetch(request, env, ctx);
+  },
+};
+
+export { app };
+export default handler;
