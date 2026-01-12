@@ -49,6 +49,7 @@ database_id = "1b259c13-8008-4086-a437-478527cac62a" # 填入生产环境数据�
 
 [env.production.vars]
 ENVIRONMENT = "production"
+CORS_ORIGIN = "https://bigplans-prod.44901560.workers.dev"
 
 # 使用以下命令设置生产环境密钥：
 # wrangler secret put JWT_SECRET --env production
