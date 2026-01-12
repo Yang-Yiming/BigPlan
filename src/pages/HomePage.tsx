@@ -554,6 +554,7 @@ export function HomePage() {
                   unlockStatus={kissUnlockStatus}
                   onSubmit={isViewingOwnData ? handleKissFormSubmit : undefined}
                   onPlanNextDay={isViewingOwnData ? handlePlanNextDay : undefined}
+                  readOnly={!isViewingOwnData}
                 />
               )}
             </div>

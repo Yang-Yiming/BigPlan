@@ -219,14 +219,32 @@ commentRoutes.get('/task/:taskId', async (c) => {
         content: comments.content,
         isDailyComment: comments.isDailyComment,
         createdAt: comments.createdAt,
-        username: users.username,
-        avatarUrl: users.avatarUrl,
+        // 用户信息
+        userUsername: users.username,
+        userAvatarUrl: users.avatarUrl,
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
       .where(eq(comments.taskId, taskId));
 
-    return c.json({ comments: taskComments });
+    // 格式化为包含嵌套 user 对象的结构
+    const formattedComments = taskComments.map((comment) => ({
+      id: comment.id,
+      userId: comment.userId,
+      targetUserId: comment.targetUserId,
+      taskId: comment.taskId,
+      date: comment.date,
+      content: comment.content,
+      isDailyComment: comment.isDailyComment,
+      createdAt: comment.createdAt,
+      user: {
+        id: comment.userId,
+        username: comment.userUsername,
+        avatarUrl: comment.userAvatarUrl,
+      },
+    }));
+
+    return c.json({ comments: formattedComments });
   } catch (error) {
     console.error('Get task comments error:', error);
     return c.json({ error: 'Internal server error' }, 500);
@@ -291,8 +309,9 @@ commentRoutes.get('/daily', async (c) => {
         content: comments.content,
         isDailyComment: comments.isDailyComment,
         createdAt: comments.createdAt,
-        username: users.username,
-        avatarUrl: users.avatarUrl,
+        // 用户信息
+        userUsername: users.username,
+        userAvatarUrl: users.avatarUrl,
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
@@ -304,7 +323,24 @@ commentRoutes.get('/daily', async (c) => {
         )
       );
 
-    return c.json({ comments: dailyComments });
+    // 格式化为包含嵌套 user 对象的结构
+    const formattedComments = dailyComments.map((comment) => ({
+      id: comment.id,
+      userId: comment.userId,
+      targetUserId: comment.targetUserId,
+      taskId: comment.taskId,
+      date: comment.date,
+      content: comment.content,
+      isDailyComment: comment.isDailyComment,
+      createdAt: comment.createdAt,
+      user: {
+        id: comment.userId,
+        username: comment.userUsername,
+        avatarUrl: comment.userAvatarUrl,
+      },
+    }));
+
+    return c.json({ comments: formattedComments });
   } catch (error) {
     console.error('Get daily comments error:', error);
     return c.json({ error: 'Internal server error' }, 500);
