@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import type { Task } from '../types';
-import { CommentList } from './CommentList';
 import { commentService } from '../services/comment.service';
 import { useToast } from '../contexts/ToastContext';
 import { useConfirm } from '../contexts/ConfirmDialogContext';
@@ -13,19 +12,26 @@ interface TaskCardProps {
   onUpdate?: (taskId: number, progressValue: number) => Promise<void>;
   onEdit?: (task: Task) => void;
   onDelete?: (taskId: number) => Promise<void>;
+  isHovered?: boolean;
+  isSelected?: boolean;
+  onHover?: (taskId: number | null) => void;
+  onSelect?: (taskId: number) => void;
 }
 
 export function TaskCard({
   task,
-  currentUserId,
+  currentUserId: _currentUserId,
   targetUserId,
   selectedDate,
   onUpdate,
   onEdit,
   onDelete,
+  isHovered = false,
+  isSelected = false,
+  onHover,
+  onSelect,
 }: TaskCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const { showToast } = useToast();
   const { confirm } = useConfirm();
@@ -49,19 +55,6 @@ export function TaskCard({
     loadCommentCount();
   }, [task.id, selectedDate, targetUserId]);
 
-  const handleCommentAdded = async () => {
-    // 刷新评论数量
-    try {
-      const comments = await commentService.getComments({
-        taskId: task.id,
-        date: selectedDate,
-        targetUserId,
-      });
-      setCommentCount(comments.length);
-    } catch (error) {
-      console.error('刷新评论数量失败:', error);
-    }
-  };
 
   const handleProgressClick = async () => {
     if (task.progressType === 'boolean' && onUpdate) {
@@ -117,7 +110,7 @@ export function TaskCard({
       try {
         await onDelete(task.id);
         showToast('任务已删除', 'success');
-      } catch (error) {
+      } catch {
         showToast('删除任务失败', 'error');
         setIsDeleting(false);
       }
@@ -133,8 +126,8 @@ export function TaskCard({
             disabled={isReadOnly}
             className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
               task.progressValue === 1
-                ? 'bg-green-500 border-green-500'
-                : 'bg-white border-gray-300 hover:border-green-500'
+                ? 'bg-primary-500 border-primary-500'
+                : 'bg-white border-secondary-300 hover:border-primary-400'
             } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
             aria-label="Toggle completion"
           >
@@ -193,11 +186,10 @@ export function TaskCard({
                     className={`
                       w-6 h-6 rounded border-2 transition-all duration-300 ease-out
                       ${isCompleted
-                        ? 'bg-blue-500 border-blue-500 scale-100'
-                        : 'bg-white border-gray-300 hover:border-blue-500 hover:scale-105'
+                        ? 'bg-primary-500 border-primary-500 scale-100'
+                        : 'bg-white border-secondary-300 hover:border-primary-400 hover:scale-105'
                       }
                       ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}
-                      ${isCompleted ? 'shadow-sm' : ''}
                     `}
                     style={{
                       transitionDelay: isCompleted ? `${index * 30}ms` : '0ms',
@@ -246,7 +238,7 @@ export function TaskCard({
           <div className="flex-1 flex items-center gap-3">
             <div className="flex-1 bg-gray-200 rounded-full h-3 relative overflow-hidden shadow-inner">
               <div
-                className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-500 ease-out rounded-full relative"
+                className="bg-gradient-to-r from-primary-500 to-primary-600 h-full transition-all duration-500 ease-out rounded-full relative"
                 style={{ width: `${percentage}%` }}
               >
                 <div className="absolute inset-0 bg-white opacity-20 animate-pulse" />
@@ -318,20 +310,32 @@ export function TaskCard({
   };
 
   return (
-    <div
-      className={`bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow ${
-        isDeleting ? 'opacity-50' : ''
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex-1">
+    <div className="relative">
+      <div
+        className={`
+          bg-white rounded-2xl border-2 p-5
+          transition-all duration-300 cursor-pointer
+          ${isDeleting ? 'opacity-50' : ''}
+          ${isSelected
+            ? 'border-primary-500 shadow-lg shadow-primary-100 scale-[1.02] ring-2 ring-primary-200 ring-offset-2'
+            : isHovered
+              ? 'border-primary-300 shadow-md shadow-primary-50 scale-[1.01] -translate-y-0.5'
+              : 'border-[#e4e4e7] hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5'
+          }
+        `}
+        onMouseEnter={() => onHover?.(task.id)}
+        onMouseLeave={() => onHover?.(null)}
+        onClick={() => onSelect?.(task.id)}
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex-1">
           <div className="flex items-start justify-between mb-2">
             <h3 className="text-lg font-medium text-gray-900">{task.title}</h3>
             {!isReadOnly && (
               <div className="flex gap-2 ml-2">
                 <button
                   onClick={() => onEdit!(task)}
-                  className="text-gray-400 hover:text-blue-600 transition-colors"
+                  className="text-gray-400 hover:text-primary-600 transition-colors"
                   aria-label="Edit task"
                 >
                   <svg
@@ -398,54 +402,29 @@ export function TaskCard({
               <span>周期性任务</span>
             </div>
           )}
-
-          {/* 评论按钮 */}
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <button
-              onClick={() => setShowComments(!showComments)}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
-              <span>评论</span>
-              {commentCount > 0 && (
-                <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-600 text-xs rounded-full">
-                  {commentCount}
-                </span>
-              )}
-            </button>
           </div>
-
-          {/* 评论区域 */}
-          {showComments && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <CommentList
-                filters={{
-                  taskId: task.id,
-                  date: selectedDate,
-                  targetUserId,
-                  isDailyComment: false,
-                }}
-                currentUserId={currentUserId}
-                autoRefresh={true}
-                refreshInterval={15000}
-                onCommentAdded={handleCommentAdded}
-              />
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Comment Count Badge */}
+      {commentCount > 0 && (
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-primary-50 text-primary-600 rounded-lg text-xs font-medium border border-primary-200 pointer-events-none">
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          {commentCount}
+        </div>
+      )}
     </div>
   );
 }

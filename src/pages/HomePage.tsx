@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -13,6 +13,8 @@ import {
   KissFormSkeleton,
   EmptyState,
   EmptyStateIcons,
+  TaskCommentsPanel,
+  TaskCommentsDrawer,
 } from '../components';
 import { taskService } from '../services/task.service';
 import { kissService } from '../services/kiss.service';
@@ -54,6 +56,11 @@ export function HomePage() {
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
   const [memberKissSettings, setMemberKissSettings] = useState<Map<number, boolean>>(new Map());
   const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
+
+  // Task interaction state (for two-column layout)
+  const [hoveredTaskId, setHoveredTaskId] = useState<number | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Check if user came from group management page with a group ID
   useEffect(() => {
@@ -222,6 +229,50 @@ export function HomePage() {
     }
   };
 
+  // Task interaction handlers for two-column layout
+  const handleTaskHover = (taskId: number | null) => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    if (selectedTaskId) return; // Don't update hover when task is selected
+
+    if (taskId === null) {
+      setHoveredTaskId(null);
+    } else {
+      hoverTimeoutRef.current = setTimeout(() => {
+        setHoveredTaskId(taskId);
+      }, 50); // 50ms delay to avoid flickering
+    }
+  };
+
+  const handleTaskSelect = (taskId: number) => {
+    if (selectedTaskId === taskId) {
+      setSelectedTaskId(null); // Deselect if clicking same task
+    } else {
+      setSelectedTaskId(taskId);
+    }
+  };
+
+  // Auto-deselect if selected task is deleted
+  useEffect(() => {
+    if (selectedTaskId && !tasks.find(t => t.id === selectedTaskId)) {
+      setSelectedTaskId(null);
+    }
+  }, [tasks, selectedTaskId]);
+
+  // Keyboard handler: Escape to deselect
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedTaskId) {
+        setSelectedTaskId(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedTaskId]);
+
   const handleKissFormSubmit = async (formData: KissFormData) => {
     try {
       await kissService.saveReflection(formData);
@@ -249,8 +300,12 @@ export function HomePage() {
 
   const showKissTab = isViewingOwnData || memberKissSettings.get(selectedMemberId!);
 
+  // Determine which task's comments to show in the panel
+  const activeTaskId = selectedTaskId || hoveredTaskId;
+  const activeTask = tasks.find(t => t.id === activeTaskId) || null;
+
   return (
-    <div className="min-h-screen bg-secondary-50">
+    <div className="min-h-screen bg-[#fafafa]">
       {/* Top Navigation */}
       <TopNavbar
         username={user?.username || ''}
@@ -270,7 +325,7 @@ export function HomePage() {
           onClick={() => setShowMobileSidebar(false)}
         >
           <div
-            className="bg-white w-64 h-full shadow-xl animate-slide-in"
+            className="bg-white w-64 h-full border-r border-[#e4e4e7] animate-slide-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-4 border-b border-gray-200">
@@ -376,7 +431,7 @@ export function HomePage() {
                 <div className="mb-6 flex items-center justify-between md:justify-end">
                   <button
                     onClick={handleCreateTask}
-                    className="px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium shadow-sm hover:shadow-md"
+                    className="px-4 py-2.5 bg-gradient-to-br from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-lg transition-all duration-200 flex items-center gap-2 font-medium shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)] active:scale-[0.98] tracking-tight"
                   >
                     <svg
                       className="w-5 h-5"
@@ -410,29 +465,79 @@ export function HomePage() {
                   } : undefined}
                 />
               ) : (
-                <div className="space-y-4">
-                  {tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      currentUserId={user!.id}
-                      targetUserId={currentViewUserId}
-                      selectedDate={selectedDate}
-                      onUpdate={isViewingOwnData ? handleUpdateProgress : undefined}
-                      onEdit={isViewingOwnData ? handleEditTask : undefined}
-                      onDelete={isViewingOwnData ? handleDeleteTask : undefined}
-                    />
-                  ))}
-                </div>
+                <>
+                  {/* Desktop: Two-column grid */}
+                  <div className="hidden lg:grid lg:grid-cols-10 gap-6">
+                    {/* Left Column - Task List (60%) */}
+                    <div className="lg:col-span-6 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2">
+                      {tasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          currentUserId={user!.id}
+                          targetUserId={currentViewUserId}
+                          selectedDate={selectedDate}
+                          onUpdate={isViewingOwnData ? handleUpdateProgress : undefined}
+                          onEdit={isViewingOwnData ? handleEditTask : undefined}
+                          onDelete={isViewingOwnData ? handleDeleteTask : undefined}
+                          isHovered={hoveredTaskId === task.id}
+                          isSelected={selectedTaskId === task.id}
+                          onHover={handleTaskHover}
+                          onSelect={handleTaskSelect}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Right Column - Comments Panel (40%) */}
+                    <div className="lg:col-span-4">
+                      <TaskCommentsPanel
+                        task={activeTask}
+                        currentUserId={user!.id}
+                        targetUserId={currentViewUserId}
+                        selectedDate={selectedDate}
+                        isSelected={selectedTaskId !== null}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mobile: Single column with drawer */}
+                  <div className="lg:hidden space-y-4">
+                    {tasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        currentUserId={user!.id}
+                        targetUserId={currentViewUserId}
+                        selectedDate={selectedDate}
+                        onUpdate={isViewingOwnData ? handleUpdateProgress : undefined}
+                        onEdit={isViewingOwnData ? handleEditTask : undefined}
+                        onDelete={isViewingOwnData ? handleDeleteTask : undefined}
+                        isSelected={selectedTaskId === task.id}
+                        onSelect={handleTaskSelect}
+                        // No onHover on mobile
+                      />
+                    ))}
+                  </div>
+
+                  {/* Mobile Comments Drawer */}
+                  <TaskCommentsDrawer
+                    task={activeTask}
+                    isOpen={selectedTaskId !== null}
+                    onClose={() => setSelectedTaskId(null)}
+                    currentUserId={user!.id}
+                    targetUserId={currentViewUserId}
+                    selectedDate={selectedDate}
+                  />
+                </>
               )}
             </div>
           )}
 
           {/* KISS Tab Content */}
           {activeTab === 'kiss' && showKissTab && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 animate-fade-in">
+            <div className="bg-white rounded-lg border border-[#e4e4e7] p-4 md:p-6 animate-fade-in">
               {!isViewingOwnData && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm flex items-center gap-2">
+                <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-lg text-primary-700 text-sm flex items-center gap-2">
                   <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                     <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -456,7 +561,7 @@ export function HomePage() {
 
           {/* Comments Tab Content */}
           {activeTab === 'comments' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 animate-fade-in">
+            <div className="bg-white rounded-lg border border-[#e4e4e7] p-4 md:p-6 animate-fade-in">
               <h2 className="text-xl font-semibold mb-4 text-gray-900 flex items-center gap-2">
                 <span>💬</span>
                 {isViewingOwnData

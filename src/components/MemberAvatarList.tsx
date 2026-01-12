@@ -3,7 +3,6 @@
  * 用于显示群组成员的头像，支持点击切换查看不同成员的数据
  */
 
-import { useState } from 'react';
 import type { GroupMember } from '../types/group';
 
 interface MemberAvatarListProps {
@@ -23,7 +22,6 @@ export function MemberAvatarList({
   memberKissSettings,
   onToggleKiss,
 }: MemberAvatarListProps) {
-  const [showSettings, setShowSettings] = useState(false);
 
   const handleAvatarClick = (memberId: number) => {
     if (selectedMemberId === memberId) {
@@ -40,12 +38,12 @@ export function MemberAvatarList({
 
   const getAvatarColor = (userId: number) => {
     const colors = [
-      'bg-blue-500',
+      'bg-primary-500',
       'bg-green-500',
       'bg-yellow-500',
       'bg-purple-500',
       'bg-pink-500',
-      'bg-indigo-500',
+      'bg-indigo-600',
       'bg-red-500',
       'bg-teal-500',
     ];
@@ -53,32 +51,34 @@ export function MemberAvatarList({
   };
 
   return (
-    <div className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-20 bg-gray-100 border-r border-gray-300 flex flex-col items-center py-4 space-y-3 overflow-y-auto">
+    <div className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-20 bg-[#fafafa] border-r border-[#e4e4e7] flex flex-col items-center py-4 space-y-3 overflow-y-auto pb-4">
       {/* 自己的头像始终在最上方 */}
       {currentUserId && (
         <div
-          className={`relative cursor-pointer transition-transform hover:scale-110 ${
-            selectedMemberId === null ? 'ring-4 ring-blue-400' : ''
+          className={`relative cursor-pointer transition-all hover:scale-110 ${
+            selectedMemberId === null ? 'scale-105' : ''
           }`}
           onClick={() => onMemberSelect(null)}
           title="查看我的数据"
         >
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md ${getAvatarColor(
+            className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${getAvatarColor(
               currentUserId
-            )}`}
+            )} ${
+              selectedMemberId === null ? 'shadow-lg shadow-primary-400/50' : ''
+            }`}
           >
             我
           </div>
           {selectedMemberId === null && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white"></div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary-500 rounded-full border-2 border-white shadow-md"></div>
           )}
         </div>
       )}
 
       {/* 分隔线 */}
       {members.length > 0 && (
-        <div className="w-12 h-px bg-gray-300 my-2"></div>
+        <div className="w-12 h-px bg-[#e4e4e7] my-2"></div>
       )}
 
       {/* 其他成员头像 */}
@@ -91,8 +91,8 @@ export function MemberAvatarList({
           return (
             <div key={member.id} className="relative group">
               <div
-                className={`relative cursor-pointer transition-transform hover:scale-110 ${
-                  isSelected ? 'ring-4 ring-blue-400' : ''
+                className={`relative cursor-pointer transition-all hover:scale-110 ${
+                  isSelected ? 'scale-105' : ''
                 }`}
                 onClick={() => handleAvatarClick(member.userId)}
                 title={`查看 ${member.username} 的数据`}
@@ -101,19 +101,23 @@ export function MemberAvatarList({
                   <img
                     src={member.avatarUrl}
                     alt={member.username}
-                    className="w-12 h-12 rounded-full object-cover shadow-md"
+                    className={`w-12 h-12 rounded-full object-cover ${
+                      isSelected ? 'shadow-lg shadow-primary-400/50' : ''
+                    }`}
                   />
                 ) : (
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md ${getAvatarColor(
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold ${getAvatarColor(
                       member.userId
-                    )}`}
+                    )} ${
+                      isSelected ? 'shadow-lg shadow-primary-400/50' : ''
+                    }`}
                   >
                     {getAvatarInitials(member.username)}
                   </div>
                 )}
                 {isSelected && (
-                  <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white"></div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary-500 rounded-full border-2 border-white shadow-md"></div>
                 )}
               </div>
 
@@ -143,39 +147,6 @@ export function MemberAvatarList({
             </div>
           );
         })}
-
-      {/* 设置按钮 */}
-      <div className="mt-auto pt-4 border-t border-gray-300 w-full flex justify-center relative">
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors flex items-center justify-center"
-          title="群组设置"
-        >
-          ⚙️
-        </button>
-
-        {/* 设置面板 */}
-        {showSettings && (
-          <div className="fixed left-20 bottom-4 bg-white rounded-lg shadow-xl border border-gray-200 p-4 w-48 z-50 animate-scale-in">
-            <div className="text-sm font-semibold mb-2 text-gray-900">群组设置</div>
-            <button
-              onClick={() => {
-                setShowSettings(false);
-                window.location.href = '/groups';
-              }}
-              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-gray-900"
-            >
-              管理群组
-            </button>
-            <button
-              onClick={() => setShowSettings(false)}
-              className="w-full text-left px-3 py-2 hover:bg-gray-100 rounded text-sm text-gray-600 mt-1"
-            >
-              关闭
-            </button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
