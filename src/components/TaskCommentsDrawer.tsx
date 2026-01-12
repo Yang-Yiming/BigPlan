@@ -71,7 +71,7 @@ export function TaskCommentsDrawer({
         </div>
 
         {/* Comments Content */}
-        <div className="h-[calc(100vh-88px)] overflow-y-auto p-4">
+        <div className="h-[calc(100vh-88px)] overflow-y-auto p-4 px-5 py-6">
           <CommentList
             filters={{
               taskId: task.id,

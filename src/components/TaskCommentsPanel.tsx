@@ -65,7 +65,7 @@ export function TaskCommentsPanel({
       </div>
 
       {/* Comments Section */}
-      <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+      <div className="max-h-[calc(100vh-400px)] overflow-y-auto px-1 py-2">
         <CommentList
           filters={{
             taskId: task.id,
