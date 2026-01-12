@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { Group } from '../types/group';
+import { GroupManagementDropdown } from './GroupManagementDropdown';
 
 interface TopNavbarProps {
   username: string;
@@ -13,9 +13,11 @@ interface TopNavbarProps {
   availableGroups: Group[];
   isViewingOwnData: boolean;
   currentViewUsername?: string;
+  currentUserId: number;
   onGroupChange: (groupId: number) => void;
   onLogout: () => void;
   onMobileMenuToggle?: () => void;
+  onGroupsUpdated?: () => void;
 }
 
 export function TopNavbar({
@@ -24,15 +26,18 @@ export function TopNavbar({
   availableGroups,
   isViewingOwnData,
   currentViewUsername,
+  currentUserId,
   onGroupChange,
   onLogout,
   onMobileMenuToggle,
+  onGroupsUpdated,
 }: TopNavbarProps) {
-  const navigate = useNavigate();
   const [showGroupSelector, setShowGroupSelector] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showGroupManagement, setShowGroupManagement] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const groupManagementRef = useRef<HTMLDivElement>(null);
 
   // 点击外部关闭设置面板
   useEffect(() => {
@@ -50,6 +55,23 @@ export function TopNavbar({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showSettings]);
+
+  // 点击外部关闭群组管理面板
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (groupManagementRef.current && !groupManagementRef.current.contains(event.target as Node)) {
+        setShowGroupManagement(false);
+      }
+    };
+
+    if (showGroupManagement) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showGroupManagement]);
 
   const handleGroupSelect = (groupId: number) => {
     onGroupChange(groupId);
@@ -136,6 +158,34 @@ export function TopNavbar({
                 )}
               </div>
             )}
+
+            {/* 群组管理按钮 */}
+            <div className="relative" ref={groupManagementRef}>
+              <button
+                onClick={() => setShowGroupManagement(!showGroupManagement)}
+                className="p-1.5 md:p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                title="群组管理"
+                aria-label="Group management"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </button>
+
+              {/* 群组管理下拉面板 */}
+              {showGroupManagement && (
+                <GroupManagementDropdown
+                  currentUserId={currentUserId}
+                  onGroupSelected={(groupId) => {
+                    onGroupChange(groupId);
+                    setShowGroupManagement(false);
+                  }}
+                  onGroupsUpdated={() => {
+                    onGroupsUpdated?.();
+                  }}
+                />
+              )}
+            </div>
           </div>
 
           {/* 右侧：用户信息和操作按钮 */}
@@ -175,7 +225,7 @@ export function TopNavbar({
                     {/* 群组管理 */}
                     <button
                       onClick={() => {
-                        navigate('/groups');
+                        setShowGroupManagement(true);
                         setShowSettings(false);
                       }}
                       className="w-full text-left px-3 py-2.5 hover:bg-gray-50 rounded-lg text-sm text-gray-700 font-medium transition-colors flex items-center gap-2"
@@ -265,7 +315,7 @@ export function TopNavbar({
               {/* 群组管理 */}
               <button
                 onClick={() => {
-                  navigate('/groups');
+                  setShowGroupManagement(true);
                   setShowMobileMenu(false);
                 }}
                 className="w-full px-4 py-2 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"

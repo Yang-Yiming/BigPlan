@@ -3,7 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext';
 import { ProtectedRoute, ToastContainer } from './components';
-import { LoginPage, RegisterPage, HomePage, GroupManagePage } from './pages';
+import { LoginPage, RegisterPage, HomePage } from './pages';
 
 function App() {
   return (
@@ -16,7 +16,6 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/groups" element={<GroupManagePage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

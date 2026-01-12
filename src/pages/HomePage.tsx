@@ -108,6 +108,11 @@ export function HomePage() {
     setSelectedMemberId(null); // Reset to viewing own data
   };
 
+  const handleGroupsUpdated = async () => {
+    // Reload the groups list
+    await loadAvailableGroups();
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -313,9 +318,11 @@ export function HomePage() {
         availableGroups={availableGroups}
         isViewingOwnData={isViewingOwnData}
         currentViewUsername={currentViewUsername}
+        currentUserId={user!.id}
         onGroupChange={handleGroupChange}
         onLogout={handleLogout}
         onMobileMenuToggle={() => setShowMobileSidebar(!showMobileSidebar)}
+        onGroupsUpdated={handleGroupsUpdated}
       />
 
       {/* Mobile Sidebar Overlay */}
