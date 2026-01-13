@@ -104,6 +104,9 @@ Configuration files:
 **Route Structure:**
 - `src/server/routes/auth.ts` - Registration, login (JWT generation)
 - `src/server/routes/tasks.ts` - CRUD for tasks (progress types: boolean/numeric/percentage)
+  - **Auto-generates recurring task instances** on creation (next 30 days)
+  - **Auto-generates missing instances** when fetching tasks for a date
+  - Supports limited repetition via `maxOccurrences` field
 - `src/server/routes/reflections.ts` - Daily reflections (deprecated in favor of KISS)
 - `src/server/routes/kiss.ts` - KISS reflections (Keep, Improve, Start, Stop)
 - `src/server/routes/groups.ts` - Group management and member invitations
@@ -148,6 +151,8 @@ Schema location: `src/db/schema/`
 **Core Tables:**
 - `users` - User accounts with bcrypt password hashing
 - `tasks` - Tasks with progress types (boolean, numeric, percentage) and periodicity
+  - `maxOccurrences` - Nullable integer for limiting recurring task instances (null = infinite repetition)
+  - `parentTaskId` - References parent task ID for tracking generated instances
 - `kiss-reflections` - Daily KISS reflections (Keep, Improve, Start, Stop)
 - `groups` - Collaboration groups
 - `group-members` - Many-to-many relationship between users and groups
@@ -156,6 +161,12 @@ Schema location: `src/db/schema/`
 **Important Concepts:**
 - **Progress Types**: Tasks support three types: boolean (done/not done), numeric (e.g., 5/10), percentage (0-100%)
 - **Periodicity**: Tasks can be one-time, daily, weekly, or monthly
+- **Recurring Tasks Auto-Generation**:
+  - **Hybrid Strategy**: When creating a recurring task, the system generates next 30 days of instances immediately
+  - **On-Demand Generation**: When viewing a date, missing instances are generated automatically
+  - **Limited Repetition**: Set `maxOccurrences` to limit total instances (leave null for infinite)
+  - **Instance Tracking**: Generated instances have `parentTaskId` pointing to the template task
+  - Implementation: `src/server/utils/recurring-tasks.ts` contains generation logic
 - **KISS Framework**: Keep (what worked), Improve (what needs work), Start (new habits), Stop (bad habits)
 
 ### Environment Variables
@@ -190,6 +201,8 @@ Production secrets are set via: `wrangler secret put JWT_SECRET --env production
 5. **Environment Variables**: Vite requires `VITE_` prefix for frontend env vars. Backend vars don't need prefix.
 
 6. **Testing Database**: Tests use separate SQLite instance configured in `src/test/setup.ts`.
+
+7. **Recurring Tasks**: When creating a recurring task, instances are generated automatically. Check `src/server/utils/recurring-tasks.ts` for generation logic. Generated instances have `isRecurring = false` and `parentTaskId` set to the template task ID.
 
 ## Code Patterns
 
@@ -226,3 +239,24 @@ Use service files in `src/services/` that wrap `apiClient` from `src/lib/api-cli
 - **Database**: Cloudflare D1 (SQLite at edge)
 - **CDN**: Automatic via Cloudflare Pages (for static frontend)
 - **Config**: `wrangler.toml` defines bindings and environment settings
+
+## Continuous Deployment
+
+**GitHub Actions** is configured for automatic deployment on push to `main` branch.
+
+**Workflow File:** `.github/workflows/deploy.yml`
+
+**Required GitHub Secrets:**
+- `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account ID
+- `CLOUDFLARE_API_TOKEN` - API token with Workers and D1 edit permissions
+
+**Deployment Process:**
+1. Push to `main` branch triggers GitHub Actions
+2. Workflow installs dependencies (Bun)
+3. Runs database migrations (`bun run db:migrate:prod`)
+4. Builds production bundle (`bun run build:prod`)
+5. Deploys to Cloudflare Workers (`wrangler deploy`)
+
+**Setup Guide:** See `GITHUB_ACTIONS_SETUP.md` for detailed step-by-step instructions on creating API tokens and configuring GitHub Secrets.
+
+**Monitoring:** View deployment status at https://github.com/Yang-Yiming/BigPlan/actions
