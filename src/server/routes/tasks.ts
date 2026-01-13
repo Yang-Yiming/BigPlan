@@ -3,7 +3,10 @@ import { eq, and, sql } from 'drizzle-orm';
 import { tasks } from '../../db/schema/tasks';
 import { authMiddleware } from '../middleware/auth';
 import type { DbClient } from '../../db/client';
-import { generateRecurringTasksForDate } from '../utils/recurring-tasks';
+import {
+  generateRecurringTasksForDate,
+  generateInitialInstances,
+} from '../utils/recurring-tasks';
 
 export const taskRoutes = new Hono<{
   Variables: {
@@ -33,6 +36,7 @@ taskRoutes.post('/', async (c) => {
       maxProgress,
       isRecurring = false,
       recurrencePattern,
+      maxOccurrences,
     } = body;
 
     // 验证必填字段
@@ -86,6 +90,12 @@ taskRoutes.post('/', async (c) => {
             400
           );
         }
+
+        // Add maxOccurrences to pattern if provided
+        if (maxOccurrences !== undefined && maxOccurrences !== null) {
+          pattern.maxOccurrences = maxOccurrences;
+          body.recurrencePattern = JSON.stringify(pattern);
+        }
       } catch {
         return c.json(
           { error: 'Invalid recurrence pattern JSON format' },
@@ -107,9 +117,15 @@ taskRoutes.post('/', async (c) => {
         progressValue,
         maxProgress,
         isRecurring,
-        recurrencePattern,
+        recurrencePattern: body.recurrencePattern || recurrencePattern,
+        parentTaskId: null, // This is a template task
       })
       .returning();
+
+    // If recurring, generate initial 30-day batch
+    if (isRecurring) {
+      await generateInitialInstances(db, newTask.id);
+    }
 
     return c.json(
       {
@@ -144,6 +160,9 @@ taskRoutes.get('/', async (c) => {
     }
 
     const db = c.get('db');
+
+    // Generate missing recurring tasks for this date (on-demand generation)
+    await generateRecurringTasksForDate(db, userPayload.userId, date);
 
     const taskList = await db
       .select()
@@ -186,6 +205,9 @@ taskRoutes.get('/users/:userId/tasks', async (c) => {
 
     // TODO: 在未来可以添加群组成员验证逻辑
     // 现在先简单实现:任何登录用户都可以查看其他用户的任务
+
+    // Generate missing recurring tasks for this date (on-demand generation)
+    await generateRecurringTasksForDate(db, targetUserId, date);
 
     const taskList = await db
       .select()

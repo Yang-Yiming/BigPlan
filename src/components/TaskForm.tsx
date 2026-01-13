@@ -43,6 +43,7 @@ export function TaskForm({
   const [recurrenceFrequency, setRecurrenceFrequency] =
     useState<RecurrenceFrequency>('daily');
   const [recurrenceInterval, setRecurrenceInterval] = useState(1);
+  const [maxOccurrences, setMaxOccurrences] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const { showToast } = useToast();
@@ -53,6 +54,7 @@ export function TaskForm({
         const pattern = JSON.parse(task.recurrencePattern) as RecurrencePattern;
         setRecurrenceFrequency(pattern.frequency);
         setRecurrenceInterval(pattern.interval);
+        setMaxOccurrences(pattern.maxOccurrences ?? null);
       } catch (e) {
         console.error('Failed to parse recurrence pattern:', e);
       }
@@ -88,6 +90,7 @@ export function TaskForm({
           ? {
               frequency: recurrenceFrequency,
               interval: recurrenceInterval,
+              maxOccurrences: maxOccurrences ?? undefined,
             }
           : undefined,
       };
@@ -277,6 +280,27 @@ export function TaskForm({
                     }
                     min="1"
                     max="30"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    重复次数
+                    <span className="text-gray-500 text-xs ml-1">
+                      (留空表示无限重复)
+                    </span>
+                  </label>
+                  <input
+                    type="number"
+                    value={maxOccurrences ?? ''}
+                    onChange={(e) =>
+                      setMaxOccurrences(
+                        e.target.value ? parseInt(e.target.value) : null
+                      )
+                    }
+                    min="1"
+                    placeholder="无限"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                     disabled={isLoading}
                   />

@@ -15,6 +15,13 @@
       "when": 1768134200120,
       "tag": "0001_funny_sharon_carter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768272409914,
+      "tag": "0002_complex_skin",
+      "breakpoints": true
     }
   ]
 }

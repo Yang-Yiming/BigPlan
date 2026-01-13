@@ -400,6 +400,21 @@ export function TaskCard({
                 />
               </svg>
               <span>周期性任务</span>
+              {task.recurrencePattern && (() => {
+                try {
+                  const pattern = JSON.parse(task.recurrencePattern);
+                  if (pattern.maxOccurrences) {
+                    return (
+                      <span className="text-xs text-gray-400">
+                        (最多 {pattern.maxOccurrences} 次)
+                      </span>
+                    );
+                  }
+                } catch {
+                  // Ignore parse errors
+                }
+                return null;
+              })()}
             </div>
           )}
           </div>

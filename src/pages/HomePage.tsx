@@ -475,7 +475,7 @@ export function HomePage() {
                   {/* Desktop: Two-column grid */}
                   <div className="hidden lg:grid lg:grid-cols-10 gap-6">
                     {/* Left Column - Task List (60%) */}
-                    <div className="lg:col-span-6 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 px-1 py-2">
+                    <div className="lg:col-span-6 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-2 px-4 py-4">
                       {tasks.map((task) => (
                         <TaskCard
                           key={task.id}

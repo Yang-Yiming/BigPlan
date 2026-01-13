@@ -21,6 +21,8 @@ export const tasks = sqliteTable('tasks', {
     .notNull()
     .default(false),
   recurrencePattern: text('recurrence_pattern'), // JSON string: { frequency: 'daily' | 'weekly' | 'monthly', interval: number }
+  maxOccurrences: integer('max_occurrences'), // null = infinite, number = max instances to generate
+  parentTaskId: integer('parent_task_id'), // null for template tasks, references parent task id for generated instances
   createdAt: integer('created_at', { mode: 'timestamp' })
     .notNull()
     .default(sql`(unixepoch())`),
@@ -31,6 +33,7 @@ export const tasks = sqliteTable('tasks', {
   userDateIdx: index('idx_tasks_user_date').on(table.userId, table.date),
   userRecurringIdx: index('idx_tasks_user_recurring').on(table.userId, table.isRecurring),
   createdAtIdx: index('idx_tasks_created_at').on(table.createdAt),
+  parentTaskIdx: index('idx_tasks_parent').on(table.parentTaskId),
 }));
 
 export type Task = typeof tasks.$inferSelect;

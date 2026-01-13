@@ -5,6 +5,7 @@ export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly';
 export interface RecurrencePattern {
   frequency: RecurrenceFrequency;
   interval: number;
+  maxOccurrences?: number | null; // undefined/null = infinite
 }
 
 export interface Task {

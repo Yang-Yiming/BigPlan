@@ -1,10 +1,11 @@
 import type { DbClient } from '../../db/client';
 import { tasks, type Task } from '../../db/schema/tasks';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 export interface RecurrencePattern {
   frequency: 'daily' | 'weekly' | 'monthly';
   interval: number;
+  maxOccurrences?: number | null; // undefined/null = infinite
 }
 
 /**
@@ -35,6 +36,24 @@ export function calculateNextDate(
 }
 
 /**
+ * Count how many instances have been generated for a recurring task
+ * @param db 数据库客户端
+ * @param parentTaskId 父任务 ID
+ * @returns 已生成的实例数量
+ */
+export async function countGeneratedInstances(
+  db: DbClient,
+  parentTaskId: number
+): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(tasks)
+    .where(eq(tasks.parentTaskId, parentTaskId));
+
+  return Number(result[0]?.count || 0);
+}
+
+/**
  * 为指定日期生成周期性任务
  * @param db 数据库客户端
  * @param userId 用户 ID
@@ -60,6 +79,16 @@ export async function generateRecurringTasksForDate(
       const pattern: RecurrencePattern = JSON.parse(
         recurringTask.recurrencePattern
       );
+
+      const maxOccurrences = pattern.maxOccurrences ?? null;
+
+      // If there's a limit, check how many instances exist
+      if (maxOccurrences !== null) {
+        const existingCount = await countGeneratedInstances(db, recurringTask.id);
+        if (existingCount >= maxOccurrences) {
+          continue; // Skip this task, limit reached
+        }
+      }
 
       // 检查目标日期是否应该生成任务
       if (shouldGenerateTask(recurringTask.date, targetDate, pattern)) {
@@ -91,6 +120,7 @@ export async function generateRecurringTasksForDate(
               maxProgress: recurringTask.maxProgress,
               isRecurring: false, // 生成的任务不是周期性的
               recurrencePattern: null,
+              parentTaskId: recurringTask.id, // 关联到父任务
             })
             .returning();
 
@@ -192,4 +222,37 @@ export async function generateRecurringTasksForRange(
   }
 
   return allGeneratedTasks;
+}
+
+/**
+ * Generate next 30 days of instances for a newly created recurring task
+ * @param db 数据库客户端
+ * @param taskId 周期性任务 ID
+ * @returns 生成的任务实例列表
+ */
+export async function generateInitialInstances(
+  db: DbClient,
+  taskId: number
+): Promise<Task[]> {
+  const [recurringTask] = await db
+    .select()
+    .from(tasks)
+    .where(eq(tasks.id, taskId))
+    .limit(1);
+
+  if (!recurringTask?.isRecurring || !recurringTask.recurrencePattern) {
+    return [];
+  }
+
+  // Calculate end date (30 days from start)
+  const startDate = new Date(recurringTask.date);
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 30);
+
+  return await generateRecurringTasksForRange(
+    db,
+    recurringTask.userId,
+    recurringTask.date,
+    endDate.toISOString().split('T')[0]
+  );
 }
