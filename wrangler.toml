@@ -1,5 +1,5 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "bigplans"
+name = "plancake"
 main = "src/server/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
@@ -15,14 +15,14 @@ enabled = true
 # 开发环境数据库
 [[d1_databases]]
 binding = "DB"
-database_name = "bigplans-db"
+database_name = "plancake-db"
 database_id = "1b259c13-8008-4086-a437-478527cac62a"
 migrations_dir = "drizzle/migrations"
 
 # 生产环境数据库配置（在生产环境中取消注释并填入实际 database_id）
 # [[d1_databases]]
 # binding = "DB"
-# database_name = "bigplans-db-prod"
+# database_name = "plancake-db-prod"
 # database_id = "your-production-database-id"
 
 # 开发环境变量
@@ -31,7 +31,7 @@ ENVIRONMENT = "development"
 
 # 生产环境配置（使用 wrangler secret 设置敏感信息）
 [env.production]
-name = "bigplans-prod"
+name = "plancake-prod"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
@@ -44,18 +44,18 @@ enabled = true
 
 [[env.production.d1_databases]]
 binding = "DB"
-database_name = "bigplans-db-prod"
+database_name = "plancake-db-prod"
 database_id = "1b259c13-8008-4086-a437-478527cac62a" # 填入生产环境数据库 ID
 
 [env.production.vars]
 ENVIRONMENT = "production"
-CORS_ORIGIN = "https://bigplans-prod.44901560.workers.dev"
+CORS_ORIGIN = "https://plancake-prod.44901560.workers.dev"
 
 # 使用以下命令设置生产环境密钥：
 # wrangler secret put JWT_SECRET --env production
 
 # 路由配置（生产环境）
 # [env.production.routes]
-# pattern = "api.bigplans.com/*"
-# zone_name = "bigplans.com"
+# pattern = "api.plancake.com/*"
+# zone_name = "plancake.com"
 

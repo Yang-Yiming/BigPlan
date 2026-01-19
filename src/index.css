@@ -1,34 +1,53 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary colors (Indigo - Linear-inspired) */
-  --color-primary-50: #eef2ff;
-  --color-primary-100: #e0e7ff;
-  --color-primary-200: #c7d2fe;
-  --color-primary-300: #a5b4fc;
-  --color-primary-400: #818cf8;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #4f46e5;
-  --color-primary-700: #4338ca;
-  --color-primary-800: #3730a3;
-  --color-primary-900: #312e81;
+  /* Vanilla Cream - 主色（交互元素）*/
+  --color-vanilla-50: #fefdfb;
+  --color-vanilla-100: #fef9f3;
+  --color-vanilla-200: #fef3e7;
+  --color-vanilla-300: #fde8d0;
+  --color-vanilla-400: #fbd9b4;
+  --color-vanilla-500: #f9c98d;
+  --color-vanilla-600: #f5b563;
+  --color-vanilla-700: #d89748;
+  --color-vanilla-800: #b07638;
+  --color-vanilla-900: #8a5a2b;
 
-  /* Secondary colors (Zinc/Neutral) */
-  --color-secondary-50: #fafafa;
-  --color-secondary-100: #f4f4f5;
-  --color-secondary-200: #e4e4e7;
-  --color-secondary-300: #d4d4d8;
-  --color-secondary-400: #a1a1aa;
-  --color-secondary-500: #71717a;
-  --color-secondary-600: #52525b;
-  --color-secondary-700: #3f3f46;
-  --color-secondary-800: #27272a;
-  --color-secondary-900: #18181b;
+  /* Honey - 次要色（强调和高亮）*/
+  --color-honey-50: #fefce8;
+  --color-honey-100: #fef9c3;
+  --color-honey-200: #fef08a;
+  --color-honey-300: #fde047;
+  --color-honey-400: #facc15;
+  --color-honey-500: #eab308;
+  --color-honey-600: #ca8a04;
+  --color-honey-700: #a16207;
+  --color-honey-800: #854d0e;
+  --color-honey-900: #713f12;
 
-  /* Charcoal colors for text */
-  --color-charcoal-light: #52525b;
-  --color-charcoal-base: #27272a;
-  --color-charcoal-dark: #18181b;
+  /* Maple - 边框色（柔和强调）*/
+  --color-maple-50: #fdf8f6;
+  --color-maple-100: #f9efe8;
+  --color-maple-200: #f3dfd0;
+  --color-maple-300: #e7cab5;
+  --color-maple-400: #d9b39a;
+  --color-maple-500: #c99a7d;
+  --color-maple-600: #b07f5f;
+  --color-maple-700: #8f6446;
+  --color-maple-800: #6f4e35;
+  --color-maple-900: #533a27;
+
+  /* Neutral - 中性色（文字和背景）*/
+  --color-neutral-50: #fafaf9;
+  --color-neutral-100: #f5f5f4;
+  --color-neutral-200: #e7e5e4;
+  --color-neutral-300: #d6d3d1;
+  --color-neutral-400: #a8a29e;
+  --color-neutral-500: #78716c;
+  --color-neutral-600: #57534e;
+  --color-neutral-700: #44403c;
+  --color-neutral-800: #292524;
+  --color-neutral-900: #1c1917;
 
   /* Font Family */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -71,6 +90,11 @@ body {
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #fefdfb; /* vanilla-50 */
+  background-image:
+    linear-gradient(to right, rgba(217, 179, 154, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(217, 179, 154, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 /* Headings with tight tracking */

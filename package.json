@@ -1,5 +1,5 @@
 {
-  "name": "bigplans",
+  "name": "plancake",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -20,7 +20,7 @@
     "db:generate": "drizzle-kit generate --config=drizzle.config.local.ts",
     "db:generate:prod": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "drizzle-kit migrate --config=drizzle.config.local.ts",
-    "db:migrate:prod": "wrangler d1 migrations apply bigplans-db --remote",
+    "db:migrate:prod": "wrangler d1 migrations apply plancake-db --remote",
     "db:studio": "drizzle-kit studio --config=drizzle.config.local.ts",
     "db:push": "drizzle-kit push --config=drizzle.config.local.ts",
     "db:drop": "drizzle-kit drop --config=drizzle.config.local.ts",

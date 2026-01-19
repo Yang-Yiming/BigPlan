@@ -1,6 +1,6 @@
-# BigPlans
+# PlanCake 🥞
 
-一个现代化的全栈任务管理应用，基于 Cloudflare Workers 和 React 构建。
+一个温馨可爱的全栈任务管理应用，带有清新淡雅的香草煎饼主题，基于 Cloudflare Workers 和 React 构建。
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev/)

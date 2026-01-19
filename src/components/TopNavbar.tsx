@@ -92,7 +92,7 @@ export function TopNavbar({
   };
 
   return (
-    <nav className="bg-white border-b border-[#e4e4e7] fixed top-0 left-0 right-0 z-40">
+    <nav className="bg-vanilla-50 border-b border-maple-200 fixed top-0 left-0 right-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* 左侧：Logo 和群组选择器 */}
@@ -113,9 +113,9 @@ export function TopNavbar({
             </button>
 
             {/* Logo */}
-            <h1 className="text-xl md:text-2xl font-bold text-primary-600 tracking-tight flex items-center gap-2">
-              <span className="hidden sm:inline">📋</span>
-              BigPlans
+            <h1 className="text-xl md:text-2xl font-bold text-vanilla-700 tracking-tight flex items-center gap-2">
+              <span className="hidden sm:inline">🥞</span>
+              PlanCake
             </h1>
 
             {/* 群组选择器 */}
@@ -123,7 +123,7 @@ export function TopNavbar({
               <div className="relative">
                 <button
                   onClick={() => setShowGroupSelector(!showGroupSelector)}
-                  className="flex items-center gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-secondary-50 text-secondary-900 rounded-lg hover:bg-secondary-100 transition-all duration-200 text-sm md:text-base border border-transparent hover:border-secondary-200"
+                  className="flex items-center gap-2 px-2 md:px-3 py-1.5 md:py-2 bg-vanilla-100 text-neutral-900 rounded-xl hover:bg-vanilla-200 transition-all duration-200 text-sm md:text-base border border-transparent hover:border-maple-200"
                   aria-label="Select group"
                 >
                   <span className="font-medium max-w-[120px] md:max-w-none truncate">
@@ -140,13 +140,13 @@ export function TopNavbar({
 
                 {/* 群组下拉菜单 */}
                 {showGroupSelector && availableGroups.length > 1 && (
-                  <div className="absolute top-full left-0 mt-1 bg-white rounded-lg border border-[#e4e4e7] py-1 min-w-[200px] max-w-[300px] z-50 animate-slide-up">
+                  <div className="absolute top-full left-0 mt-1 bg-white rounded-xl border border-maple-200 py-1 min-w-[200px] max-w-[300px] z-50 animate-slide-up">
                     {availableGroups.map(group => (
                       <button
                         key={group.id}
                         onClick={() => handleGroupSelect(group.id)}
                         className={`w-full text-left px-4 py-2 hover:bg-gray-100 text-sm transition-colors ${
-                          group.id === currentGroup?.id ? 'bg-primary-50 text-primary-700 font-medium' : 'text-gray-700'
+                          group.id === currentGroup?.id ? 'bg-vanilla-50 text-vanilla-700 font-medium' : 'text-gray-700'
                         }`}
                       >
                         {group.name}
@@ -193,7 +193,7 @@ export function TopNavbar({
                 <div className="text-sm text-gray-600">欢迎回来</div>
                 <div className="text-sm font-medium text-gray-900">{username}</div>
               </div>
-              <div className="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-semibold">
+              <div className="w-10 h-10 rounded-2xl bg-vanilla-600 text-white flex items-center justify-center font-semibold">
                 {username.slice(0, 2).toUpperCase()}
               </div>
             </div>
@@ -214,7 +214,7 @@ export function TopNavbar({
 
               {/* 设置面板 */}
               {showSettings && (
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg border border-[#e4e4e7] w-64 z-50 animate-slide-up">
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-xl border border-maple-200 w-64 z-50 animate-slide-up">
                   <div className="p-4 border-b border-gray-200">
                     <h3 className="text-base font-semibold text-gray-900">设置</h3>
                   </div>
@@ -255,7 +255,7 @@ export function TopNavbar({
 
             {/* 查看提示（移动端隐藏） */}
             {!isViewingOwnData && currentViewUsername && (
-              <div className="hidden md:flex items-center gap-1 px-3 py-1.5 bg-primary-50 text-primary-700 rounded-lg text-sm border border-primary-200">
+              <div className="hidden md:flex items-center gap-1 px-3 py-1.5 bg-vanilla-50 text-vanilla-700 rounded-xl text-sm border border-vanilla-300">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                   <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -287,7 +287,7 @@ export function TopNavbar({
           <div className="px-4 py-3 space-y-3">
             {/* 用户信息 */}
             <div className="flex items-center gap-3 pb-3 border-b border-gray-200">
-              <div className="w-10 h-10 rounded-full bg-primary-500 text-white flex items-center justify-center font-semibold">
+              <div className="w-10 h-10 rounded-2xl bg-vanilla-600 text-white flex items-center justify-center font-semibold">
                 {username.slice(0, 2).toUpperCase()}
               </div>
               <div>
@@ -298,7 +298,7 @@ export function TopNavbar({
 
             {/* 查看提示 */}
             {!isViewingOwnData && currentViewUsername && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 text-primary-700 rounded-lg text-sm border border-primary-200">
+              <div className="flex items-center gap-2 px-3 py-2 bg-vanilla-50 text-vanilla-700 rounded-xl text-sm border border-vanilla-300">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                   <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />

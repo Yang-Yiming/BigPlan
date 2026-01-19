@@ -126,8 +126,8 @@ export function TaskCard({
             disabled={isReadOnly}
             className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
               task.progressValue === 1
-                ? 'bg-primary-500 border-primary-500'
-                : 'bg-white border-secondary-300 hover:border-primary-400'
+                ? 'bg-vanilla-600 border-vanilla-600'
+                : 'bg-white border-maple-300 hover:border-vanilla-400'
             } ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}`}
             aria-label="Toggle completion"
           >
@@ -186,8 +186,8 @@ export function TaskCard({
                     className={`
                       w-6 h-6 rounded border-2 transition-all duration-300 ease-out
                       ${isCompleted
-                        ? 'bg-primary-500 border-primary-500 scale-100'
-                        : 'bg-white border-secondary-300 hover:border-primary-400 hover:scale-105'
+                        ? 'bg-vanilla-600 border-vanilla-600 scale-100'
+                        : 'bg-white border-maple-300 hover:border-vanilla-400 hover:scale-105'
                       }
                       ${isReadOnly ? 'cursor-default' : 'cursor-pointer'}
                     `}
@@ -238,7 +238,7 @@ export function TaskCard({
           <div className="flex-1 flex items-center gap-3">
             <div className="flex-1 bg-gray-200 rounded-full h-3 relative overflow-hidden shadow-inner">
               <div
-                className="bg-gradient-to-r from-primary-500 to-primary-600 h-full transition-all duration-500 ease-out rounded-full relative"
+                className="bg-gradient-to-r from-vanilla-500 to-vanilla-600 h-full transition-all duration-500 ease-out rounded-full relative"
                 style={{ width: `${percentage}%` }}
               >
                 <div className="absolute inset-0 bg-white opacity-20 animate-pulse" />
@@ -313,14 +313,14 @@ export function TaskCard({
     <div className="relative">
       <div
         className={`
-          bg-white rounded-2xl border-2 p-5
+          bg-white rounded-3xl border-2 p-5
           transition-all duration-300 cursor-pointer
           ${isDeleting ? 'opacity-50' : ''}
           ${isSelected
-            ? 'border-primary-500 shadow-lg shadow-primary-100 scale-[1.02] ring-2 ring-primary-200 ring-offset-2'
+            ? 'border-vanilla-600 shadow-lg shadow-vanilla-100 scale-[1.02] ring-2 ring-vanilla-200 ring-offset-2'
             : isHovered
-              ? 'border-primary-300 shadow-md shadow-primary-50 scale-[1.01] -translate-y-0.5'
-              : 'border-[#e4e4e7] hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5'
+              ? 'border-vanilla-400 shadow-md shadow-vanilla-50 scale-[1.01] -translate-y-0.5'
+              : 'border-maple-200 hover:border-vanilla-300 hover:shadow-md hover:-translate-y-0.5'
           }
         `}
         onMouseEnter={() => onHover?.(task.id)}
@@ -335,7 +335,7 @@ export function TaskCard({
               <div className="flex gap-2 ml-2">
                 <button
                   onClick={() => onEdit!(task)}
-                  className="text-gray-400 hover:text-primary-600 transition-colors"
+                  className="text-gray-400 hover:text-vanilla-700 transition-colors"
                   aria-label="Edit task"
                 >
                   <svg
@@ -423,7 +423,7 @@ export function TaskCard({
 
       {/* Comment Count Badge */}
       {commentCount > 0 && (
-        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-primary-50 text-primary-600 rounded-lg text-xs font-medium border border-primary-200 pointer-events-none">
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-honey-50 text-honey-700 rounded-xl text-xs font-medium border border-honey-300 pointer-events-none">
           <svg
             className="w-3.5 h-3.5"
             fill="none"
